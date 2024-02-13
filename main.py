@@ -1,13 +1,12 @@
-# pylint: disable=E0611,W0611,C0103,C0303
+# pylint: disable=E0611,C0103,C0303
 """
 This module provides a PyQt5 application for a chat window.
 """
 import sys
 import asyncio
-from qasync import QEventLoop, asyncSlot
+from qasync import QEventLoop
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QApplication, QPushButton
-from src.chat_bubble import ChatBubble
+from PyQt5.QtWidgets import QApplication
 from src.main_window import MainWindow
 
 

@@ -15,10 +15,12 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import Qt, QTimer
-from config import global_variables as GLOBAL
+from src.config import load_config
 from src.chat_bubble import ChatBubble
 from src.chat_logger import ChatLogger
 from src.llm import LLM
+
+config = load_config()
 
 
 class ChatWindow(QScrollArea):
@@ -46,8 +48,8 @@ class ChatWindow(QScrollArea):
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
         # Define image paths as class member variables
-        self.avatar_dst_gpt = GLOBAL.AVATAR_DST_GPT
-        self.avatar_user = GLOBAL.AVATAR_USER
+        self.avatar_dst_gpt = config.get("AVATAR_DST_GPT")
+        self.avatar_user = config.get("AVATAR_USER")
         current_datetime = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         self.log_filepath = f"log/chatlog_{current_datetime}.txt"
         self.chat_logger = ChatLogger(self.log_filepath)
