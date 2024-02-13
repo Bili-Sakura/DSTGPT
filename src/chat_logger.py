@@ -4,7 +4,9 @@ This module provides functinalities for logging.
 """
 import datetime
 import os
-from config import global_variables as GLOBAL
+from src.config import load_config
+
+config = load_config()
 
 
 class ChatLogger:
@@ -19,7 +21,7 @@ class ChatLogger:
             "start_time": self.time,
             "end_time": self.time,
             "message_counts": 0,
-            "base_model": GLOBAL.BASE_MODEL,
+            "base_model": config.get("BASE_MODEL"),
             "chat_tokens": 0,
             "cost": 0,
         }
