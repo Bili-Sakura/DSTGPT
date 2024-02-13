@@ -29,7 +29,7 @@ from src.menu_manager import MenuManager
 from src.chat_window import ChatWindow
 from src.input_line import InputLine
 from src.llm import LLM
-from src.config import load_config, update_config
+from src.config import load_config, update_config, configUpdater
 from src.apikey_window import ApiKeyDialog
 
 
@@ -41,6 +41,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.config = load_config()
+        configUpdater.configChanged.connect(self.displayConfigInfo)
         self.initUI()
 
         # Create an instance of LLM class
@@ -104,10 +105,37 @@ class MainWindow(QMainWindow):
             ],
         )
         self.menuManager.createActionMenu(
+            "Prompt Template",
+            [
+                ("Use Weak Prompt", lambda: self.setPromptTemplate(type="weak")),
+                (
+                    "Use Strong Prompt:Default",
+                    lambda: self.setPromptTemplate(type="default"),
+                ),
+                (
+                    "Self-Defined Prompt",
+                    lambda: self.setPromptTemplate(type="self-defined"),
+                ),
+            ],
+        )
+        self.menuManager.createActionMenu(
             "Icons",
             [
                 ("Change User Icon", self.changeUserIcon),
                 ("Change Model Icon", self.changeModelIcon),
+            ],
+        )
+        self.menuManager.createCheckableMenu(
+            "RAG",
+            [
+                (
+                    "Enable RAG:Default",
+                    self.config.get("RAG") == "enabled",
+                ),
+                (
+                    "Disable RAG",
+                    self.config.get("RAG") == "disabled",
+                ),
             ],
         )
 
@@ -195,8 +223,24 @@ class MainWindow(QMainWindow):
             self.llm.update_vectorstore(source_path, file_type)
 
     def clearVectorstore(self):
-        # 实现清除 Vectorstore 的逻辑
-        pass
+        """
+        Clears the vectorstore by deleting the existing database if it exists.
+        """
+        vectorstore_filepath = self.config.get("VECTORSTORE_FILEPATH")
+        if os.path.exists(vectorstore_filepath):
+            confirm = QMessageBox.question(
+                self,
+                "Confirm Clear",
+                "Confirm to Delete the Existing Database?",
+                QMessageBox.Yes | QMessageBox.No,
+            )
+            if confirm == QMessageBox.Yes:
+                os.remove(vectorstore_filepath)
+                QMessageBox.information(
+                    None, "File Deleted", "Database has been deleted."
+                )
+        else:
+            QMessageBox.information(None, "File Not Found", "The file does not exist.")
 
     def changeUserIcon(self):
         """
@@ -234,13 +278,20 @@ class MainWindow(QMainWindow):
             update_config("AVATAR_DST_GPT", relative_path)
             self.chatWindow.update_avatar()
 
+    def setPromptTemplate(self, type):
+        print()
+
     def createStatusBar(self):
         """
         Creates and initializes the status bar.
         """
         self.statusbar = self.statusBar()
-        # # 设置状态栏信息
-        self.statusbar.showMessage("Ready")
+        self.statusbar.setStyleSheet(
+            "background-color: rgba(255, 255, 255, 0.8);color: black"
+        )
+        self.statusbar.setFixedHeight(25)
+        self.statusbar.setFocusPolicy(Qt.NoFocus)
+        self.displayConfigInfo()
 
     def createChatWindow(self):
         """
@@ -313,6 +364,20 @@ class MainWindow(QMainWindow):
         palette = self.palette()
         palette.setBrush(self.backgroundRole(), QBrush(background))
         self.setPalette(palette)
+
+    def displayConfigInfo(self):
+        """
+        Displays the configuration information in the status bar.
+        """
+        config_info = (
+            "Base Model: "
+            + self.config.get("BASE_MODEL")
+            + " | Temperature: "
+            + str(self.config.get("TEMPERATURE"))
+            + " | Vectorstore Directory: "
+            + self.config.get("VECTORSTORE_DIRECTORY")
+        )
+        self.statusbar.showMessage(config_info)
 
     @asyncSlot()
     async def onReturnPressed(self):

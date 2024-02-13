@@ -183,7 +183,7 @@ If you already have a Chroma vectorstore with a local file like `chroma.sqlite3`
 
 **5.Prompt Template**
 
-![GUI configureVectorstore](./assets/GUI_configureVectorstore)
+![GUI setPromptTemplate](./assets/GUI_setPromptTemplate)
 
 ### Icons
 

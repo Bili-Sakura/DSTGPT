@@ -1,9 +1,10 @@
 {
     "AVATAR_DST_GPT": "assets\\logo.jpg",
     "AVATAR_USER": "assets\\Avatar_User.jpg",
-    "BASE_MODEL": "gpt-3.5-turbo-0125",
+    "BASE_MODEL": "gpt-3.5-turbo-16k-0613",
     "SAMPLE_COURPUS": "data\\sample_data.json",
-    "TEMPERATURE": 0.7,
-    "VECTORSTORE_FILEPATH":"database\\chroma.sqlite3",
-    "VECTORSTORE_DIRECTORY":"database"
+    "TEMPERATURE": 0.0,
+    "VECTORSTORE_FILEPATH": "database\\chroma.sqlite3",
+    "VECTORSTORE_DIRECTORY": "database",
+    "RAG":"enabled"
 }
