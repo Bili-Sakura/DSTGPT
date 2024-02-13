@@ -20,8 +20,6 @@ from src.chat_bubble import ChatBubble
 from src.chat_logger import ChatLogger
 from src.llm import LLM
 
-config = load_config()
-
 
 class ChatWindow(QScrollArea):
     """
@@ -32,6 +30,10 @@ class ChatWindow(QScrollArea):
         super().__init__(parent)
 
         self.initUI()
+        # Define image paths as class member variables
+        self.config = load_config()
+        self.avatar_dst_gpt = self.config.get("AVATAR_DST_GPT")
+        self.avatar_user = self.config.get("AVATAR_USER")
         self.chatWithLLM_Demo()
 
     def initUI(self):
@@ -47,9 +49,6 @@ class ChatWindow(QScrollArea):
         self.setWidget(self.chatWindowWidgetContents)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
-        # Define image paths as class member variables
-        self.avatar_dst_gpt = config.get("AVATAR_DST_GPT")
-        self.avatar_user = config.get("AVATAR_USER")
         current_datetime = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         self.log_filepath = f"log/chatlog_{current_datetime}.txt"
         self.chat_logger = ChatLogger(self.log_filepath)
@@ -88,11 +87,13 @@ class ChatWindow(QScrollArea):
 
     def addMessage(self, text, side, tokens=0, cost=0):
         """
-        Adds a message to the chat window.
+        Adds a message to the chat window with the avatar based on the current configuration.
 
         Args:
             text (str): The text of the message.
             side (str): The side of the chat window where the message should be displayed.
+            tokens (int): Number of tokens used by the message (optional).
+            cost (float): Cost of the message (optional).
 
         Returns:
             None
@@ -144,3 +145,14 @@ class ChatWindow(QScrollArea):
         scroll_bar = self.verticalScrollBar()
         if scroll_bar.maximum() >= scroll_bar.value():
             scroll_bar.setValue(scroll_bar.maximum())
+
+    def update_avatar(self):
+        """
+        Updates the avatar paths with new values.
+
+        Returns:
+            None
+        """
+        self.config = load_config()
+        self.avatar_dst_gpt = self.config.get("AVATAR_DST_GPT")
+        self.avatar_user = self.config.get("AVATAR_USER")

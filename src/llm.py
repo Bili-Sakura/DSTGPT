@@ -19,6 +19,7 @@ from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.chains import create_retrieval_chain
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.documents import Document
+from src.config import load_config
 
 
 class LLM:
@@ -41,7 +42,10 @@ class LLM:
 
         # Set up your API key from OpenAI
         self.api_key = os.getenv("OPENAI_API_KEY")
-        self.base_url = os.getenv("OPENAI_BASE_URL")
+        if os.getenv("OPENAI_BASE_URL") != "":
+            self.base_url = os.getenv("OPENAI_BASE_URL")
+        else:
+            self.base_url = None
         # Initialize ChatOpenAI
         self.llm = ChatOpenAI(
             openai_api_key=self.api_key,
@@ -156,3 +160,28 @@ class LLM:
             llm=self.llm,
             prompt=retreival_prompt,
         )
+
+    def update_api_key(self):
+        """
+        Updates the API Key with new values.
+
+        Returns:
+            None
+        """
+        # Load environment variables from .env
+        load_dotenv()
+
+        # Set up your API key from OpenAI
+        self.api_key = os.getenv("OPENAI_API_KEY")
+        if os.getenv("OPENAI_BASE_URL") != "":
+            self.base_url = os.getenv("OPENAI_BASE_URL")
+        else:
+            self.base_url = None
+
+    def update_vectorstore(self, source_path, file_type):
+        if file_type == ".txt":
+            print()
+        elif file_type == ".json":
+            print()
+        else:
+            print(f"Invalid new source type{file_type}!")

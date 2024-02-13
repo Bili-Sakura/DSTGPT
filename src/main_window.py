@@ -5,6 +5,8 @@ This module represents the main window GUI using PyQt5.
 import asyncio
 import functools
 import re
+import os
+from dotenv import set_key, find_dotenv
 from qasync import QEventLoop, asyncSlot
 from langchain_community.callbacks import get_openai_callback, openai_info
 from PyQt5.QtWidgets import (
@@ -18,6 +20,7 @@ from PyQt5.QtWidgets import (
     QStatusBar,
     QActionGroup,
     QAction,
+    QFileDialog,
 )
 from PyQt5.QtGui import QPixmap, QPalette, QBrush, QImage, QPainter, QColor
 from PyQt5.QtCore import Qt, QTimer
@@ -26,9 +29,7 @@ from src.chat_window import ChatWindow
 from src.input_line import InputLine
 from src.llm import LLM
 from src.config import load_config, update_config
-
-# 使用配置
-config = load_config()
+from src.apikey_window import ApiKeyDialog
 
 
 class MainWindow(QMainWindow):
@@ -38,11 +39,13 @@ class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
+        self.config = load_config()
         self.initUI()
+
         # Create an instance of LLM class
         self.llm = LLM(
-            corpus_filepath=config.get("COURPUS_FILEPATH"),
-            base_model=config.get("BASE_MODEL"),
+            corpus_filepath=self.config.get("COURPUS_FILEPATH"),
+            base_model=self.config.get("BASE_MODEL"),
         )
 
     def initUI(self):
@@ -67,17 +70,23 @@ class MainWindow(QMainWindow):
         self.menuManager.createCheckableMenu(
             "Base Model",
             [
-                ("gpt-3.5-turbo-0125", True),
-                ("gpt-3.5-turbo-16k-0613", False),
-                ("gpt-3.5-turbo", False),
+                (
+                    "gpt-3.5-turbo-0125:Default",
+                    self.config.get("BASE_MODEL") == "gpt-3.5-turbo-0125",
+                ),
+                (
+                    "gpt-3.5-turbo-16k-0613",
+                    self.config.get("BASE_MODEL") == "gpt-3.5-turbo-16k-0613",
+                ),
+                ("gpt-3.5-turbo", self.config.get("BASE_MODEL") == "gpt-3.5-turbo"),
             ],
         )
         self.menuManager.createCheckableMenu(
             "Temperature",
             [
-                ("0: Deterministic", False),
-                ("0.7: Default", True),
-                ("1: Creative", False),
+                ("0: Deterministic", self.config.get("TEMPERATURE") == 0),
+                ("0.7: Default", self.config.get("TEMPERATURE") == 0.7),
+                ("1: Creative", self.config.get("TEMPERATURE") == 1),
             ],
         )
         self.menuManager.createActionMenu(
@@ -89,7 +98,7 @@ class MainWindow(QMainWindow):
         self.menuManager.createActionMenu(
             "Vectorstore",
             [
-                ("Configure Vectorstore", self.configureVectorstore),
+                ("Initialize Vectorstore", self.initializeVectorstore),
                 ("Add Corpus to Vectorstore", self.addCorpusToVectorstore),
                 ("Clear Vectorstore", self.clearVectorstore),
             ],
@@ -103,41 +112,93 @@ class MainWindow(QMainWindow):
         )
 
     def handleMenuSelection(self):
+        """
+        Handles the selection of a menu item.
+        """
         action = self.sender()
         if action:
             menuName = action.property("menuName")
             actionText = action.text()
 
             if menuName == "Base Model":
-                model_name = actionText
+                model_name = actionText.split(":")[0]
                 update_config("BASE_MODEL", model_name)
             elif menuName == "Temperature":
                 temperature = actionText.split(":")[0]
                 update_config("TEMPERATURE", float(temperature))
 
     def setAPIKey(self):
-        # 实现设置 API Key 的逻辑
-        pass
+        """
+        Opens a dialog to allow the user to set the API Key.
+        """
+        apikey_dialog = ApiKeyDialog()
+        api_key, base_url = apikey_dialog.setAPIKey()
+        dotenv_path = find_dotenv()
+        if api_key != "":
+            set_key(dotenv_path, "OPENAI_API_KEY", api_key)
+        if base_url != "":
+            set_key(dotenv_path, "OPENAI_BASE_URL", api_key)
 
-    def configureVectorstore(self):
+    def initializeVectorstore(self):
         # 实现配置 Vectorstore 的逻辑
         pass
 
     def addCorpusToVectorstore(self):
-        # 实现添加语料到 Vectorstore 的逻辑
-        pass
+        """
+        Opens a file dialog to allow the user to select a new source and updates the vectorstore.
+        """
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        fileName, file_type = QFileDialog.getOpenFileName(
+            self,
+            "Select Source File",
+            "",
+            "Source Files (*.txt *.json)",
+            options=options,
+        )
+        if fileName:
+            source_path = os.path.relpath(fileName)
+            self.llm.update_vectorstore(source_path, file_type)
 
     def clearVectorstore(self):
         # 实现清除 Vectorstore 的逻辑
         pass
 
     def changeUserIcon(self):
-        # 实现更改用户图标的逻辑
-        pass
+        """
+        Opens a file dialog to allow the user to select a new icon and updates the user icon configuration.
+        """
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        fileName, _ = QFileDialog.getOpenFileName(
+            self,
+            "Select Image File",
+            "",
+            "Image Files (*.png *.jpg *.jpeg *.bmp)",
+            options=options,
+        )
+        if fileName:
+            relative_path = os.path.relpath(fileName)
+            update_config("AVATAR_USER", relative_path)
+            self.chatWindow.update_avatar()
 
     def changeModelIcon(self):
-        # 实现更改模型图标的逻辑
-        pass
+        """
+        Opens a file dialog to allow the user to select a new icon and updates the model icon configuration.
+        """
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        fileName, _ = QFileDialog.getOpenFileName(
+            self,
+            "Select Image File",
+            "",
+            "Image Files (*.png *.jpg *.jpeg *.bmp)",
+            options=options,
+        )
+        if fileName:
+            relative_path = os.path.relpath(fileName)
+            update_config("AVATAR_DST_GPT", relative_path)
+            self.chatWindow.update_avatar()
 
     def createStatusBar(self):
         """
