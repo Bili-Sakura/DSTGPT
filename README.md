@@ -219,6 +219,10 @@ DST-GPT is a chatbot intended for non-commercial use only, subject to the model 
 
 **合适的提示词增强DST-GPT能力**
 
+**语料追加记录添加在log中**
+
+**log可开启和关闭**
+
 ### Bugs
 
 **消息气泡"Thiking..."需要被移除**

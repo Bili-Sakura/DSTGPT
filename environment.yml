@@ -174,11 +174,12 @@ dependencies:
     - jsonpatch==1.33
     - jsonpointer==2.4
     - kubernetes==29.0.0
-    - langchain==0.1.5
-    - langchain-community==0.0.17
-    - langchain-core==0.1.18
+    - langchain==0.1.6
+    - langchain-community==0.0.19
+    - langchain-core==0.1.22
     - langchain-openai==0.0.5
-    - langsmith==0.0.86
+    - langsmith==0.0.87
+    - markdown2==2.4.12
     - marshmallow==3.20.2
     - mmh3==4.1.0
     - monotonic==1.6
@@ -229,6 +230,7 @@ dependencies:
     - tqdm==4.66.1
     - typer==0.9.0
     - typing-inspect==0.9.0
+    - uuid==1.30
     - uvicorn==0.27.0.post1
     - watchfiles==0.21.0
     - websockets==12.0

@@ -21,6 +21,7 @@ from PyQt5.QtWidgets import (
     QActionGroup,
     QAction,
     QFileDialog,
+    QMessageBox,
 )
 from PyQt5.QtGui import QPixmap, QPalette, QBrush, QImage, QPainter, QColor
 from PyQt5.QtCore import Qt, QTimer
@@ -44,7 +45,6 @@ class MainWindow(QMainWindow):
 
         # Create an instance of LLM class
         self.llm = LLM(
-            corpus_filepath=self.config.get("COURPUS_FILEPATH"),
             base_model=self.config.get("BASE_MODEL"),
         )
 
@@ -140,8 +140,41 @@ class MainWindow(QMainWindow):
             set_key(dotenv_path, "OPENAI_BASE_URL", api_key)
 
     def initializeVectorstore(self):
-        # 实现配置 Vectorstore 的逻辑
-        pass
+        """
+        Opens a file dialog to allow the user to select a parent directory to create a new vectorstore.
+        """
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        while True:
+            directory = QFileDialog.getExistingDirectory(
+                self, "Select Directory", options=options
+            )
+            if directory:
+                vectorstore_directory = os.path.relpath(directory)
+                vectorstore_filepath = os.path.join(
+                    vectorstore_directory, "chroma.sqlite3"
+                )
+                if os.path.exists(vectorstore_filepath):
+                    confirm = QMessageBox.question(
+                        self,
+                        "Confirm Overwrite",
+                        "Already existing a database. Confirm to overwrite it?",
+                        QMessageBox.Yes | QMessageBox.No,
+                    )
+                    if confirm == QMessageBox.Yes:
+                        self.llm.init_vectorstore(vectorstore_directory)
+                        update_config("VECTORSTORE_FILEPATH", vectorstore_filepath)
+                        update_config("VECTORSTORE_DIRECTORY", vectorstore_directory)
+
+                        break
+                else:
+                    self.llm.init_vectorstore(vectorstore_directory)
+                    update_config("VECTORSTORE_FILEPATH", vectorstore_filepath)
+                    update_config("VECTORSTORE_DIRECTORY", vectorstore_directory)
+
+                    break
+            else:
+                break
 
     def addCorpusToVectorstore(self):
         """
@@ -149,15 +182,16 @@ class MainWindow(QMainWindow):
         """
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
-        fileName, file_type = QFileDialog.getOpenFileName(
+        fileName, _ = QFileDialog.getOpenFileName(
             self,
             "Select Source File",
             "",
-            "Source Files (*.txt *.json)",
+            "Source Files (*.txt *.json *.md *.py)",
             options=options,
         )
         if fileName:
             source_path = os.path.relpath(fileName)
+            file_type = os.path.splitext(source_path)[1]
             self.llm.update_vectorstore(source_path, file_type)
 
     def clearVectorstore(self):
