@@ -28,10 +28,10 @@ class ChatWindow(QScrollArea):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-
+        self.config = load_config()
         self.initUI()
         # Define image paths as class member variables
-        self.config = load_config()
+
         self.avatar_dst_gpt = self.config.get("AVATAR_DST_GPT")
         self.avatar_user = self.config.get("AVATAR_USER")
         self.chatWithLLM_Demo()
@@ -51,7 +51,8 @@ class ChatWindow(QScrollArea):
 
         current_datetime = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         self.log_filepath = f"log/chatlog_{current_datetime}.txt"
-        self.chat_logger = ChatLogger(self.log_filepath)
+        if self.config.get("LOG") == "enabled":
+            self.chat_logger = ChatLogger(self.log_filepath)
 
     def chatWithLLM_Demo(self):
         """
@@ -133,10 +134,9 @@ class ChatWindow(QScrollArea):
         # Call scrollToBottom after 100 milliseconds
         QTimer.singleShot(100, self.scrollToBottom)
 
-        # Add the message to the log
-        self.chat_logger.add_chat_to_log(text, side, tokens, cost)
-        # Update meta data in the log
-        self.chat_logger.log_meta_update()
+        if self.config.get("LOG") == "enabled":
+            # Add the message to the log and update
+            self.chat_logger.add_chat_to_log(text, side, tokens, cost)
 
     def scrollToBottom(self):
         """

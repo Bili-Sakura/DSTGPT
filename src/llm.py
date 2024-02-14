@@ -22,7 +22,7 @@ from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.chains import create_retrieval_chain
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.documents import Document
-from src.config import load_config
+from src.config import load_config, update_config, configUpdater
 
 
 class LLM:
@@ -40,20 +40,23 @@ class LLM:
             corpus_filepath (str): Path to the corpus file
             containing data to be processed and vectorized.
         """
+        self.config = load_config()
+        configUpdater.llm_configChanged.connect(self.update_llm_configs)
         # Load environment variables from .env
         load_dotenv()
 
         # Set up your API key from OpenAI
         self.api_key = os.getenv("OPENAI_API_KEY")
         self.base_url = os.getenv("OPENAI_BASE_URL") or None
+        self.base_model = self.config.get("BASE_MODEL")
+        self.temperature = self.config.get("TEMPERATURE")
 
-        self.config = load_config()
         # Initialize ChatOpenAI
         self.llm = ChatOpenAI(
             openai_api_key=self.api_key,
             base_url=self.base_url,
-            model=base_model,
-            temperature=0,  # default=0.7; 1 to be creative; 0 to be firm
+            model=self.base_model,
+            temperature=self.temperature,
         )
 
         self.embeddings = OpenAIEmbeddings(
@@ -150,6 +153,8 @@ class LLM:
 
         print("Vectorization Finished!")
         self.retriever = self.stored_vectors.as_retriever()
+        update_config("KNOWLEDGE_SOURCES", corpus_filepath)
+        self.llm.update_llm_configs()
 
     def set_documents_chain(self):
         """
@@ -168,6 +173,40 @@ class LLM:
         self.documents_chain = create_stuff_documents_chain(
             llm=self.llm,
             prompt=retreival_prompt,
+        )
+
+    def update_llm_configs(self):
+        """
+        Updates the LLM configurations based on the environment variables and configuration file.
+        """
+        self.config = load_config()
+        load_dotenv()
+
+        self.api_key = os.getenv("OPENAI_API_KEY")
+        self.base_url = os.getenv("OPENAI_BASE_URL") or None
+        self.base_model = self.config.get("BASE_MODEL")
+        self.temperature = self.config.get("TEMPERATURE")
+
+        self.llm = ChatOpenAI(
+            openai_api_key=self.api_key,
+            base_url=self.base_url,
+            model=self.base_model,
+            temperature=self.temperature,
+        )
+
+        self.embeddings = OpenAIEmbeddings(
+            model="text-embedding-ada-002",  # default
+            openai_api_key=self.api_key,  # alias:api_key
+            base_url=self.base_url,  # If you use proxy api key, set base_url as needed
+            chunk_size=1000,  # default
+        )
+
+        self.retriever = self.stored_vectors.as_retriever()
+
+        self.set_documents_chain()
+
+        self.retrieval_chain = create_retrieval_chain(
+            self.retriever, self.documents_chain
         )
 
     def update_api_key(self):
@@ -245,3 +284,9 @@ class LLM:
             return
 
         self.vecterize_corpus(source_path, file_type)
+
+    def calculate_cost(self, tokens):
+        model_cost_per_1k_tokens = openai_info.MODEL_COST_PER_1K_TOKENS.get(
+            self.config.get("BASE_MODEL")
+        )
+        cost = tokens * model_cost_per_1k_tokens

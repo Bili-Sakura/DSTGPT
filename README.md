@@ -62,6 +62,7 @@ Note: It is also availble to use other base model instead of OpenAI's gpt series
 # Replace the value with your own OpenAI API KEY.
 OPENAI_API_KEY="sk-xxxx"
 # Enable the base url config if your api key is transited.
+# Otherwise, set as "".
 OPENAI_BASE_URL="https://baseurl.example.com"
 ```
 
@@ -217,11 +218,6 @@ DST-GPT is a chatbot intended for non-commercial use only, subject to the model 
 
 ### Wait to do list
 
-**合适的提示词增强DST-GPT能力**
-
-**语料追加记录添加在log中**
-
-**log可开启和关闭**
 
 ### Bugs
 

@@ -11,17 +11,16 @@ config = load_config()
 
 class ChatLogger:
     """
-    This class represents a chat logger that logs chat conversations to a file.
+    This class provides functionalities for logging chat messages.
     """
 
     def __init__(self, log_filepath):
-        self.time = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         self.log_filepath = log_filepath
         self.log_meta = {
-            "start_time": self.time,
-            "end_time": self.time,
+            "start_time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "message_counts": 0,
-            "base_model": config.get("BASE_MODEL"),
+            # "base_model": config.get("BASE_MODEL"),
+            "knowledge_sources": config.get("KNOWLEDGE_SOURCES", []),
             "chat_tokens": 0,
             "cost": 0,
         }
@@ -29,78 +28,61 @@ class ChatLogger:
 
     def start_log_chat(self):
         """
-        Starts logging the chat conversation.
-
-        This method opens the log file specified by `self.log_filepath`
-        and writes the chat log information to it.
-
-        Returns:
-            None
+        Creates the log directory if it does not exist.
         """
-        # Check if the directory of log_filepath exists
         check_log_directory = os.path.dirname(self.log_filepath)
         if not os.path.isdir(check_log_directory):
             os.makedirs(check_log_directory)
+        self.write_initial_meta()
+
+    def write_initial_meta(self):
         with open(self.log_filepath, "w", encoding="utf-8") as file:
-            file.write("# Chat Log\n\n")
-            file.write("## Chat Info\n")
-            file.write(f"- Start Time: {self.log_meta['start_time']}\n")
-            file.write(f"- End Time: {self.log_meta['end_time']}\n")
-            file.write(f"- Message Counts: {self.log_meta['message_counts']}\n")
-            file.write(f"- Base Model: {self.log_meta['base_model']}\n")
-            file.write(f"- Chat Tokens: ＄{self.log_meta['chat_tokens']}\n")
-            file.write(f"- Cost: ＄{self.log_meta['cost']}\n\n")
+            self.write_meta_info(file)
             file.write("## Chat Log\n")
+
+    def write_meta_info(self, file):
+        """
+        Writes the initial metadata to the log file.
+        """
+        for key, value in self.log_meta.items():
+            value_str = ", ".join(value) if isinstance(value, list) else str(value)
+            file.write(f"- {key.replace('_', ' ').title()}: {value_str}\n")
 
     def add_chat_to_log(self, message, side, chat_tokens, cost):
         """
-        Adds a message to the chat log.
+        Add a chat message to the log.
 
         Args:
-            message (str): The text of the message.
-            side (str): The side of the chat window where the message originated.
-
-        Returns:
-            None
+            message (str): The message to be added to the log.
+            side (str): The side of the chat (e.g., 'left' or 'right').
+            chat_tokens (int): The number of chat tokens used.
+            cost (float): The cost associated with the chat message.
         """
         if message == "Thinking...":
             return
-        with open(self.log_filepath, "a", encoding="utf-8") as file:
-            if side == "left":
-                file.write("DST-GPT: ")
-            elif side == "right":
-                file.write("User: ")
-            file.write(message + "\n")
 
+        # 更新元信息
         self.log_meta["message_counts"] += 1
-        self.log_meta["cost"] += cost
         self.log_meta["chat_tokens"] += chat_tokens
-        self.log_meta["end_time"] = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        self.log_meta["cost"] += cost
+        self.log_meta["end_time"] = datetime.datetime.now().strftime(
+            "%Y-%m-%d %H:%M:%S"
+        )
 
-    def log_meta_update(self):
-        """
-        Updates the metadata in the log file.
-
-        This method updates the metadata values in the log file
-        based on the current state of the chat window.
-
-        Returns:
-            None
-        """
+        # 读取文件内容
         with open(self.log_filepath, "r+", encoding="utf-8") as file:
-            lines = file.readlines()
-            file.seek(0)
+            content = file.readlines()
 
-            for line in lines:
-                if line.startswith("- Message Counts:"):
-                    file.write(f"- Message Counts: {self.log_meta['message_counts']}\n")
-                elif line.startswith("- Cost:"):
-                    file.write(f"- Cost: {self.log_meta['cost']}\n")
-                elif line.startswith("- Chat Tokens:"):
-                    file.write(f"- Chat Tokens: {self.log_meta['chat_tokens']}\n")
-                elif line.startswith("- End Time:"):
-                    file.write(f"- End Time: {self.log_meta['end_time']}\n")
-                else:
-                    file.write(line)
+        # 查找聊天记录开始的位置
+        chat_log_index = content.index("## Chat Log\n") + 1
 
-            file.truncate()
+        # 重新写入元信息和聊天记录
+        with open(self.log_filepath, "w", encoding="utf-8") as file:
+            self.write_meta_info(file)
+            file.write("## Chat Log\n")
+            for line in content[chat_log_index:]:
+                file.write(line)
+
+            # 追加新的聊天消息
+            prefix = "DST-GPT: " if side == "left" else "User: "
+            file.write(prefix + message + "\n")
