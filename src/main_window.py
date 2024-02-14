@@ -47,9 +47,7 @@ class MainWindow(QMainWindow):
         self.initUI()
 
         # Create an instance of LLM class
-        self.llm = LLM(
-            base_model=self.config.get("BASE_MODEL"),
-        )
+        self.llm = LLM()
 
     def initUI(self):
         """

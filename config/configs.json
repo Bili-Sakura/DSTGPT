@@ -12,6 +12,8 @@
     "LOG": "enabled",
     "KNOWLEDGE_SOURCES": [
         "data\\sample_data.json",
-        "data\\chinese_sample.txt"
+        "data\\chinese_sample.txt",
+        "data\\sample_data.json",
+        "data\\sample_data.json"
     ]
 }

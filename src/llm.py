@@ -13,11 +13,6 @@ from langchain_community.document_loaders import WebBaseLoader
 from langchain_community.vectorstores import Chroma
 from langchain_community.callbacks import get_openai_callback, openai_info
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from langchain.text_splitter import (
-    CharacterTextSplitter,
-    TextSplitter,
-    RecursiveJsonSplitter,
-)
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.chains import create_retrieval_chain
 from langchain_core.prompts import ChatPromptTemplate
@@ -27,31 +22,30 @@ from src.config import load_config, update_config, configUpdater
 
 class LLM:
     """
-    This class represents the LLM (Large Language Model)
-    and provides functionality for llm.
+    This class represents the Large Language Model (LLM) and provides functionality for language processing.
     """
 
-    def __init__(self, base_model="gpt-3.5-turbo-0125"):
-        """
-        Initializes the LLM object with environment variables, document embeddings,
-        and sets up the document chain for retrieval.
-
-        Args:
-            corpus_filepath (str): Path to the corpus file
-            containing data to be processed and vectorized.
-        """
-        self.config = load_config()
+    def __init__(self):
+        self.load_configs_and_envs()  # Load configurations and environment variables
         configUpdater.llm_configChanged.connect(self.update_llm_configs)
-        # Load environment variables from .env
+        self.init_llm()  # Initialize Large Language Model (LLM)
+        self.init_embeddings()  # Initialize embeddings
+        self.init_vectorstore()  # Initialize vector store
+        self.set_retrieval_chain()
+
+    def load_configs_and_envs(self):
+        """Load configuration files and environment variables."""
+        self.config = load_config()
         load_dotenv()
 
-        # Set up your API key from OpenAI
         self.api_key = os.getenv("OPENAI_API_KEY")
-        self.base_url = os.getenv("OPENAI_BASE_URL") or None
+        self.base_url = os.getenv("OPENAI_BASE_URL", None)
         self.base_model = self.config.get("BASE_MODEL")
         self.temperature = self.config.get("TEMPERATURE")
+        self.retrieval_chain = None
 
-        # Initialize ChatOpenAI
+    def init_llm(self):
+        """Initialize LLM."""
         self.llm = ChatOpenAI(
             openai_api_key=self.api_key,
             base_url=self.base_url,
@@ -59,41 +53,81 @@ class LLM:
             temperature=self.temperature,
         )
 
+    def init_embeddings(self):
+        """Initialize embeddings."""
         self.embeddings = OpenAIEmbeddings(
-            model="text-embedding-ada-002",  # default
-            openai_api_key=self.api_key,  # alias:api_key
-            base_url=self.base_url,  # If you use proxy api key, set base_url as needed
-            chunk_size=1000,  # default
+            model="text-embedding-ada-002",
+            openai_api_key=self.api_key,
+            base_url=self.base_url,
+            chunk_size=1000,
         )
 
-        self.stored_vectors = None
-        self.init_vectorstore()
-
-        self.retriever = self.stored_vectors.as_retriever()
-
-        self.documents_chain = None
-        self.set_documents_chain()
-
-        self.retrieval_chain = create_retrieval_chain(
-            self.retriever, self.documents_chain
-        )
-
-    async def get_answer_async(self, question):
+    def init_vectorstore(self, vectorstore_directory="database"):
         """
-        Retrieves the answer to the given question asynchronously.
+        Initializes the vector store with test chunks and metadata.
 
         Args:
-            question (str): The question to be answered.
+            vectorstore_directory (str): The directory path for the vector store.
+            Default is 'database'.
 
         Returns:
-            str: The answer to the question.
+            None
         """
 
+        vectorstore_filepath = os.path.join(vectorstore_directory, "chroma.sqlite3")
+        if os.path.exists(vectorstore_filepath):
+            self.stored_vectors = Chroma(
+                embedding_function=self.embeddings,
+                persist_directory=vectorstore_directory,
+            )
+        else:
+            test_chunks = ["Initialize a Chroma Database.", "Hello World!"]
+
+            self.stored_vectors = Chroma.from_texts(
+                texts=test_chunks,
+                embedding=self.embeddings,
+                persist_directory=vectorstore_directory,
+            )
+
+            sample_data_filepath = self.config.get("SAMPLE_COURPUS")
+            if os.path.exists(sample_data_filepath):
+                print("Add Sample Data into Database.")
+                self.vecterize_corpus(sample_data_filepath, ".json")
+
+    def set_retrieval_chain(self):
+        """Set up the document chain for retrieval."""
+        retrieval_prompt = ChatPromptTemplate.from_template(
+            """Answer the following question based on the provided knowledge:
+            
+            <knowledge>
+            {context}
+            </knowledge>
+            
+            Question: {input}"""
+        )
+
+        self.documents_chain = create_stuff_documents_chain(
+            llm=self.llm,
+            prompt=retrieval_prompt,
+        )
+
+        self.retrieval_chain = create_retrieval_chain(
+            self.stored_vectors.as_retriever(), self.documents_chain
+        )
+
+    def update_llm_configs(self):
+        """Update LLM configurations."""
+        self.load_configs_and_envs()  # Reload configurations and environment variables
+        self.init_llm()  # Reinitialize LLM
+        self.init_embeddings()  # Reinitialize embeddings
+        self.set_retrieval_chain()  # Reset
+
+    async def get_answer_async(self, question):
+        """Retrieve answer asynchronously for a given question."""
         # response = await self.llm.ainvoke(question)
         # answer = response.content
         response = await self.retrieval_chain.ainvoke({"input": question})
         answer = response["answer"]
-
         return answer
 
     def vecterize_corpus(self, corpus_filepath, file_type):
@@ -152,108 +186,17 @@ class LLM:
             print(f"Successed in Adding {corpus_length} Characters into Vectorstore!")
 
         print("Vectorization Finished!")
-        self.retriever = self.stored_vectors.as_retriever()
         update_config("KNOWLEDGE_SOURCES", corpus_filepath)
-        self.llm.update_llm_configs()
 
-    def set_documents_chain(self):
-        """
-        Sets up the chain of documents to be used for retrieving information in response to queries.
-        """
-        retreival_prompt = ChatPromptTemplate.from_template(
-            """Answer the following question based on the provided knowledge:
-
-        <knowledge>
-        {context}
-        </knowledge>
-        
-        Question: {input}"""
+    def calculate_cost(self, tokens):
+        """Calculate cost based on the number of tokens."""
+        model_cost_per_1k_tokens = openai_info.MODEL_COST_PER_1K_TOKENS.get(
+            self.base_model
         )
-
-        self.documents_chain = create_stuff_documents_chain(
-            llm=self.llm,
-            prompt=retreival_prompt,
-        )
-
-    def update_llm_configs(self):
-        """
-        Updates the LLM configurations based on the environment variables and configuration file.
-        """
-        self.config = load_config()
-        load_dotenv()
-
-        self.api_key = os.getenv("OPENAI_API_KEY")
-        self.base_url = os.getenv("OPENAI_BASE_URL") or None
-        self.base_model = self.config.get("BASE_MODEL")
-        self.temperature = self.config.get("TEMPERATURE")
-
-        self.llm = ChatOpenAI(
-            openai_api_key=self.api_key,
-            base_url=self.base_url,
-            model=self.base_model,
-            temperature=self.temperature,
-        )
-
-        self.embeddings = OpenAIEmbeddings(
-            model="text-embedding-ada-002",  # default
-            openai_api_key=self.api_key,  # alias:api_key
-            base_url=self.base_url,  # If you use proxy api key, set base_url as needed
-            chunk_size=1000,  # default
-        )
-
-        self.retriever = self.stored_vectors.as_retriever()
-
-        self.set_documents_chain()
-
-        self.retrieval_chain = create_retrieval_chain(
-            self.retriever, self.documents_chain
-        )
-
-    def update_api_key(self):
-        """
-        Updates the API Key with new values.
-
-        Returns:
-            None
-        """
-        # Load environment variables from .env
-        load_dotenv()
-
-        # Set up your API key from OpenAI
-        self.api_key = os.getenv("OPENAI_API_KEY")
-        self.base_url = os.getenv("OPENAI_BASE_URL") or None
-
-    def init_vectorstore(self, vectorstore_directory="database"):
-        """
-        Initializes the vector store with test chunks and metadata.
-
-        Args:
-            vectorstore_directory (str): The directory path for the vector store.
-            Default is 'database'.
-
-        Returns:
-            None
-        """
-
-        vectorstore_filepath = os.path.join(vectorstore_directory, "chroma.sqlite3")
-        if os.path.exists(vectorstore_filepath):
-            self.stored_vectors = Chroma(
-                embedding_function=self.embeddings,
-                persist_directory=vectorstore_directory,
-            )
-        else:
-            test_chunks = ["Initialize a Chroma Database.", "Hello World!"]
-
-            self.stored_vectors = Chroma.from_texts(
-                texts=test_chunks,
-                embedding=self.embeddings,
-                persist_directory=vectorstore_directory,
-            )
-
-            sample_data_filepath = self.config.get("SAMPLE_COURPUS")
-            if os.path.exists(sample_data_filepath):
-                print("Add Sample Data into Database.")
-                self.vecterize_corpus(sample_data_filepath, ".json")
+        cost = (
+            tokens * model_cost_per_1k_tokens / 1000
+        )  # Convert cost per 1k tokens to cost per token
+        return cost
 
     def update_vectorstore(self, source_path, file_type):
         """
@@ -284,9 +227,3 @@ class LLM:
             return
 
         self.vecterize_corpus(source_path, file_type)
-
-    def calculate_cost(self, tokens):
-        model_cost_per_1k_tokens = openai_info.MODEL_COST_PER_1K_TOKENS.get(
-            self.config.get("BASE_MODEL")
-        )
-        cost = tokens * model_cost_per_1k_tokens
