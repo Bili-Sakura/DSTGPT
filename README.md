@@ -136,18 +136,16 @@ Raw data is crawled from Wiki Fandom on DST webpages with little preprocess. Ref
 **The chatlog and meta infomation are automatically saved in `./log/xx.txt`**
 
 ```txt
-# chatlog_2024020112000000.txt
-## Chat Info
-- Start Time: xxx
-- End Time: xxx
-- Message Counts: xxx
-- Base Model: xxx
-- Chat Tokens: xxx
-- Cost: xxx
+- Start Time: 2024-02-14 15:56:02
+- Message Counts: 3
+- Knowledge Sources: data\sample_data.json, data\chinese_sample.txt, data\sample_data.json, data\sample_data.json
+- Chat Tokens: 1109
+- Cost: 0.0033360000000000004
+- End Time: 2024-02-14 15:56:51
 ## Chat Log
-DST-GPT: Message1
-User: Message2
-DST-GPT: Message3
+DST-GPT: Hi! I am DST-GPT, what can I help you?
+User: hi
+DST-GPT: Hello! How can I assist you today?
 ```
 
 ## Configurations
@@ -221,7 +219,7 @@ DST-GPT is a chatbot intended for non-commercial use only, subject to the model 
 
 ### Bugs
 
-**消息气泡"Thiking..."需要被移除**
+**消息气泡"Thiking..."需要被移除;气泡布局需要调整**
 
 ### Future
 

@@ -139,6 +139,10 @@ class MainWindow(QMainWindow):
                     "Disabled",
                     self.config.get("RAG") == "disabled",
                 ),
+                (
+                    "Both:Compare Mode",
+                    self.config.get("RAG") == "both",
+                ),
             ],
         )
         self.menuManager.createCheckableMenu(
@@ -174,16 +178,7 @@ class MainWindow(QMainWindow):
             elif menuName == "RAG":
                 rag_status = actionText.split(":")[0].lower()
                 update_config("RAG", rag_status)
-                if rag_status == "disabled":
-                    openai_icon = "assets\\openai.png"
-                    if os.path.exists(openai_icon):
-                        update_config("AVATAR_DST_GPT", openai_icon)
-                        self.chatWindow.update_avatar()
-                elif rag_status == "enabled":
-                    dst_gpt_icon = "assets\\logo.jpg"
-                    if os.path.exists(dst_gpt_icon):
-                        update_config("AVATAR_DST_GPT", dst_gpt_icon)
-                        self.chatWindow.update_avatar()
+
             elif menuName == "Log":
                 log_status = actionText.split(":")[0].lower()
                 update_config("LOG", log_status)
@@ -492,13 +487,12 @@ class MainWindow(QMainWindow):
         Returns:
             str: The answer to the question.
         """
+
+        load_config()
+        rag_status = self.config.get("RAG")
         with get_openai_callback() as cb:
-            llm_answer = await self.llm.get_answer_async(user_text)
+            llm_answers = await self.llm.get_answer_async(user_text, rag_status)
             tokens = cb.total_tokens
             cost = cb.total_cost
-            # cost = self.llm.calculate_cost(tokens)
-
-        print("cost:", cost)
-        self.chatWindow.addMessage(llm_answer, "left", tokens, cost)
-
-        return llm_answer
+            self.chatWindow.addMessage(llm_answers["rag"], "left-rag", tokens, cost)
+            self.chatWindow.addMessage(llm_answers["pure"], "left-pure", tokens, cost)

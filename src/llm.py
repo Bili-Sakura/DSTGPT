@@ -122,12 +122,20 @@ class LLM:
         self.init_embeddings()  # Reinitialize embeddings
         self.set_retrieval_chain()  # Reset
 
-    async def get_answer_async(self, question):
+    async def get_answer_async(self, question, rag_status="enabled"):
         """Retrieve answer asynchronously for a given question."""
-        # response = await self.llm.ainvoke(question)
-        # answer = response.content
-        response = await self.retrieval_chain.ainvoke({"input": question})
-        answer = response["answer"]
+        answer = {"rag": "", "pure": ""}
+        if rag_status == "enabled":
+            response = await self.retrieval_chain.ainvoke({"input": question})
+            answer["rag"] = response["answer"]
+        elif rag_status == "disabled":
+            response = await self.llm.ainvoke(question)
+            answer["pure"] = response.content
+        elif rag_status == "both":
+            response_rag = await self.retrieval_chain.ainvoke({"input": question})
+            answer["rag"] = response_rag["answer"]
+            response_pure = await self.llm.ainvoke(question)
+            answer["pure"] = response_pure.content
         return answer
 
     def vecterize_corpus(self, corpus_filepath, file_type):
@@ -163,7 +171,7 @@ class LLM:
                     else:
                         print(f"Processed {i} Items in Corpus!")
 
-        elif file_type in [".txt", ".md", ".py"]:
+        elif file_type in [".txt", ".md", ".py", ".lua"]:
             with open(corpus_filepath, "r", encoding="utf-8") as file:
                 corpus_data = file.read()
             if file_type == ".md":
@@ -187,16 +195,6 @@ class LLM:
 
         print("Vectorization Finished!")
         update_config("KNOWLEDGE_SOURCES", corpus_filepath)
-
-    def calculate_cost(self, tokens):
-        """Calculate cost based on the number of tokens."""
-        model_cost_per_1k_tokens = openai_info.MODEL_COST_PER_1K_TOKENS.get(
-            self.base_model
-        )
-        cost = (
-            tokens * model_cost_per_1k_tokens / 1000
-        )  # Convert cost per 1k tokens to cost per token
-        return cost
 
     def update_vectorstore(self, source_path, file_type):
         """
