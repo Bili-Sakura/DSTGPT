@@ -4,7 +4,6 @@ This module provides functionality for llm.
 """
 import os
 import asyncio
-import aiofiles
 import json
 import markdown2
 from bs4 import BeautifulSoup
@@ -133,7 +132,7 @@ class LLM:
             answer["pure"] = response_pure.content
         return answer
 
-    async def vecterize_corpus(self, corpus_filepath, file_type):
+    def vecterize_corpus(self, corpus_filepath, file_type):
         """
         Vectorizes the corpus data from the specified file.
 
@@ -141,64 +140,55 @@ class LLM:
 
         """
         if file_type == ".json":
-            async with aiofiles.open(
-                corpus_filepath, mode="r", encoding="utf-8"
-            ) as file:
-                corpus_data = json.loads(await file.read())
+            with open(corpus_filepath, "r", encoding="utf-8") as file:
+                corpus_data = json.load(file)
 
-            tasks = []
-            print("Vectorization Started!")
-            total_tasks = len(corpus_data)  # Get total number of tasks
-            for i, data in enumerate(corpus_data, 1):
-                task = asyncio.create_task(self.process_data_chunk(data))
-                tasks.append(task)
-                if i % 10 == 0 or i == total_tasks:
-                    await asyncio.gather(*tasks)
-                    print(f"Processed {i} out of {total_tasks} tasks")
+            # process large json file
+            for i, data in enumerate(corpus_data):
+                # Splitting text into 1500-character chunks with 100-character overlap
+                chunk_size = 1500
+                overlap = 100
+                chunks = [
+                    data["text"][i : i + chunk_size]
+                    for i in range(0, len(data["text"]), chunk_size - overlap)
+                ]
+                metadata = [{k: v for k, v in data.items() if k != "text"}]
 
-                    tasks = []  # Reset tasks list
+                self.stored_vectors.add_texts(
+                    texts=chunks,
+                    metadatas=metadata,
+                )
+
+                if i % 10 == 0:
+                    if i == 0:
+                        print("Start Process Json Corpus File!")
+                    else:
+                        print(f"Processed {i} Items in Corpus!")
 
         elif file_type in [".txt", ".md", ".py", ".lua"]:
-            async with aiofiles.open(
-                corpus_filepath, mode="r", encoding="utf-8"
-            ) as file:
-                corpus_data = await file.read()
+            with open(corpus_filepath, "r", encoding="utf-8") as file:
+                corpus_data = file.read()
             if file_type == ".md":
                 corpus_data = BeautifulSoup(
                     markdown2.markdown(corpus_data), "html.parser"
                 ).get_text()
 
-            # Process the entire corpus data as a single chunk
-            await self.process_data_chunk({"text": corpus_data})
+            corpus_length = len(corpus_data)
+            print(f"Processing Text Corpus File with {corpus_length} Characters...")
+            # Splitting text into 1500-character chunks with 100-character overlap
+            chunk_size = 1500
+            overlap = 100
+            chunks = [
+                corpus_data[i : i + chunk_size]
+                for i in range(0, corpus_length, chunk_size - overlap)
+            ]
+            self.stored_vectors.add_texts(
+                texts=chunks,
+            )
+            print(f"Successed in Adding {corpus_length} Characters into Vectorstore!")
 
         print("Vectorization Finished!")
         update_config("KNOWLEDGE_SOURCES", corpus_filepath)
-
-    async def process_data_chunk(self, data):
-        chunk_size = 1500
-        overlap = 100
-        chunks = [
-            data["text"][i : i + chunk_size]
-            for i in range(0, len(data["text"]), chunk_size - overlap)
-        ]
-        metadata = [{k: v for k, v in data.items() if k != "text"}]
-
-        total_chunks = len(chunks)
-
-        print(f"Processing {total_chunks} chunks...")
-
-        for i, chunk in enumerate(chunks, start=1):
-            # Since self.stored_vectors.add_texts might be blocking, run it in a thread pool
-            await asyncio.to_thread(
-                self.stored_vectors.add_texts, [chunk], [metadata] * len([chunk])
-            )
-
-            if (
-                i % 10 == 0 or i == total_chunks
-            ):  # Print progress every 10 chunks or at the end
-                print(f"Processed {i} out of {total_chunks} chunks")
-
-        print("Chunk processing completed.")
 
     def update_vectorstore(self, source_path, file_type):
         """
@@ -228,7 +218,7 @@ class LLM:
             )
             return
 
-        asyncio.run(self.vecterize_corpus(source_path, file_type))
+        self.vecterize_corpus(source_path, file_type)
 
     def calculate_cost(self, dict_tokens):
         """
