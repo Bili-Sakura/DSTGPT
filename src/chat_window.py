@@ -158,8 +158,6 @@ class ChatWindow(QScrollArea):
 
         if self.config.get("LOG") == "enabled":
             # Add the message to the log and update
-            if side in ["left", "left-rag", "left-pure"]:
-                side = "left"
             self.chat_logger.add_chat_to_log(text, side, tokens, cost)
 
     def scrollToBottom(self):

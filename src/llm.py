@@ -22,7 +22,8 @@ from src.config import load_config, update_config, configUpdater
 
 class LLM:
     """
-    This class represents the Large Language Model (LLM) and provides functionality for language processing.
+    This class represents the Large Language Model (LLM)
+    and provides functionality for language processing.
     """
 
     def __init__(self):
@@ -42,6 +43,7 @@ class LLM:
         self.base_url = os.getenv("OPENAI_BASE_URL", None)
         self.base_model = self.config.get("BASE_MODEL")
         self.temperature = self.config.get("TEMPERATURE")
+        self.prompt_template = self.config.get("PROMPT_TEMPLATE")
         self.retrieval_chain = None
 
     def init_llm(self):
@@ -96,15 +98,7 @@ class LLM:
 
     def set_retrieval_chain(self):
         """Set up the document chain for retrieval."""
-        retrieval_prompt = ChatPromptTemplate.from_template(
-            """Answer the following question based on the provided knowledge:
-            
-            <knowledge>
-            {context}
-            </knowledge>
-            
-            Question: {input}"""
-        )
+        retrieval_prompt = ChatPromptTemplate.from_template(self.prompt_template)
 
         self.documents_chain = create_stuff_documents_chain(
             llm=self.llm,

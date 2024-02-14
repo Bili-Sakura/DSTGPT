@@ -37,7 +37,7 @@ class ChatBubble(QWidget):
             "font-weight: bold; "
             "font-size: 30px; "
             "background-color: rgba(255, 255, 255, 0.6);"
-            "margin: 0px; padding: 8px; border-radius: 5px;"  # Adjust padding and border-radius as needed
+            "margin: 0px; padding: 8px; border-radius: 5px;"
             "}"
         )
 

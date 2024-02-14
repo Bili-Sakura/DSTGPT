@@ -6,8 +6,6 @@ import datetime
 import os
 from src.config import load_config
 
-config = load_config()
-
 
 class ChatLogger:
     """
@@ -15,12 +13,13 @@ class ChatLogger:
     """
 
     def __init__(self, log_filepath):
+        self.config = load_config()
         self.log_filepath = log_filepath
         self.log_meta = {
             "start_time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "message_counts": 0,
             # "base_model": config.get("BASE_MODEL"),
-            "knowledge_sources": config.get("KNOWLEDGE_SOURCES", []),
+            "knowledge_sources": self.config.get("KNOWLEDGE_SOURCES", []),
             "chat_tokens": 0,
             "cost": 0,
         }
@@ -36,6 +35,9 @@ class ChatLogger:
         self.write_initial_meta()
 
     def write_initial_meta(self):
+        """
+        Writes the initial metadata to the log file.
+        """
         with open(self.log_filepath, "w", encoding="utf-8") as file:
             self.write_meta_info(file)
             file.write("## Chat Log\n")
@@ -84,5 +86,12 @@ class ChatLogger:
                 file.write(line)
 
             # 追加新的聊天消息
-            prefix = "DST-GPT: " if side == "left" else "User: "
+            if side == "left":
+                prefix = "DST-GPT: "
+            elif side == "left-pure":
+                prefix = "OpenAI GPT: "
+            elif side == "left-rag":
+                prefix = "DST-GPT: "
+            else:
+                prefix = "User:"
             file.write(prefix + message + "\n")

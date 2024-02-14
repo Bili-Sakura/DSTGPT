@@ -193,7 +193,7 @@ class MainWindow(QMainWindow):
         if api_key != "":
             set_key(dotenv_path, "OPENAI_API_KEY", api_key)
         if base_url != "":
-            set_key(dotenv_path, "OPENAI_BASE_URL", api_key)
+            set_key(dotenv_path, "OPENAI_BASE_URL", base_url)
 
     def initializeVectorstore(self):
         """
@@ -494,5 +494,12 @@ class MainWindow(QMainWindow):
             llm_answers = await self.llm.get_answer_async(user_text, rag_status)
             tokens = cb.total_tokens
             cost = cb.total_cost
+        if llm_answers["rag"] != "" and llm_answers["pure"] != "":
             self.chatWindow.addMessage(llm_answers["rag"], "left-rag", tokens, cost)
+            self.chatWindow.addMessage(llm_answers["pure"], "left-pure")
+
+        elif llm_answers["pure"] != "":
             self.chatWindow.addMessage(llm_answers["pure"], "left-pure", tokens, cost)
+
+        elif llm_answers["rag"] != "":
+            self.chatWindow.addMessage(llm_answers["rag"], "left-rag", tokens, cost)
