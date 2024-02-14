@@ -219,3 +219,52 @@ class LLM:
             return
 
         self.vecterize_corpus(source_path, file_type)
+
+    def calculate_cost(self, dict_tokens):
+        """
+        Calculate the cost of using the language model based on the number of tokens in the prompt and completion.
+
+        Args:
+            dict_tokens (dict): A dictionary containing the number of tokens in the prompt and completion.
+
+        Returns:
+            float: The total cost of using the language model.
+        """
+        use_model_name = self.base_model
+        prompt_model_name = use_model_name
+        completion_model_name = prompt_model_name + "-completion"
+        prompt_tokens = dict_tokens["prompt_tokens"]
+        completion_tokens = dict_tokens["completion_tokens"]
+
+        # copy from langchain_community.callbacks.openai_info.py on 2024/2/14
+        MODEL_COST_PER_1K_TOKENS = {
+            # GPT-3.5 input
+            "gpt-3.5-turbo": 0.0015,
+            "gpt-3.5-turbo-0125": 0.0005,
+            "gpt-3.5-turbo-0301": 0.0015,
+            "gpt-3.5-turbo-0613": 0.0015,
+            "gpt-3.5-turbo-1106": 0.001,
+            "gpt-3.5-turbo-instruct": 0.0015,
+            "gpt-3.5-turbo-16k": 0.003,
+            "gpt-3.5-turbo-16k-0613": 0.003,
+            # GPT-3.5 output
+            "gpt-3.5-turbo-completion": 0.002,
+            "gpt-3.5-turbo-0125-completion": 0.0015,
+            "gpt-3.5-turbo-0301-completion": 0.002,
+            "gpt-3.5-turbo-0613-completion": 0.002,
+            "gpt-3.5-turbo-1106-completion": 0.002,
+            "gpt-3.5-turbo-instruct-completion": 0.002,
+            "gpt-3.5-turbo-16k-completion": 0.004,
+            "gpt-3.5-turbo-16k-0613-completion": 0.004,
+        }
+        for model, cost_per_1k_tokens in MODEL_COST_PER_1K_TOKENS.items():
+            if model == prompt_model_name:
+                prompt_cost = (prompt_tokens / 1000.0) * cost_per_1k_tokens
+            elif model == completion_model_name:
+                completion_cost = (completion_tokens / 1000.0) * cost_per_1k_tokens
+
+        if prompt_cost == 0 and completion_cost == 0:
+            raise ValueError("Model cost not found for the specified base model")
+
+        total_cost = prompt_cost + completion_cost
+        return total_cost

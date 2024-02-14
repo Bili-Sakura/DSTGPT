@@ -7,14 +7,11 @@
     "TEMPERATURE": 0.7,
     "VECTORSTORE_FILEPATH": "database\\chroma.sqlite3",
     "VECTORSTORE_DIRECTORY": "database",
-    "RAG": "enabled",
+    "RAG": "both",
     "TEMPLATE_TYPE": "default",
     "PROMPT_TEMPLATE": "Answer the following question based on the provided knowledge: \n<knowledge>\n{context}\n</knowledge>\nQuestion: {input}",
     "LOG": "enabled",
     "KNOWLEDGE_SOURCES": [
-        "data\\sample_data.json",
-        "data\\chinese_sample.txt",
-        "data\\sample_data.json",
         "data\\sample_data.json"
     ]
 }

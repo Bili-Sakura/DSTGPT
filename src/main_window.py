@@ -493,7 +493,12 @@ class MainWindow(QMainWindow):
         with get_openai_callback() as cb:
             llm_answers = await self.llm.get_answer_async(user_text, rag_status)
             tokens = cb.total_tokens
-            cost = cb.total_cost
+            dict_tokens = {
+                "prompt_tokens": cb.prompt_tokens,
+                "completion_tokens": cb.completion_tokens,
+            }
+            # cost=cb.total_cost
+            cost = self.llm.calculate_cost(dict_tokens)
         if llm_answers["rag"] != "" and llm_answers["pure"] != "":
             self.chatWindow.addMessage(llm_answers["rag"], "left-rag", tokens, cost)
             self.chatWindow.addMessage(llm_answers["pure"], "left-pure")
