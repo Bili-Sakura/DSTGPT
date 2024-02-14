@@ -28,12 +28,20 @@ class ChatWindow(QScrollArea):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.config = load_config()
+        # Define image paths as class member variables
+
+        self.avatar_dst_gpt = self.config.get("AVATAR_DST_GPT")
+        self.avatar_openai = self.config.get("AVATAR_OPENAI")
+        self.avatar_user = self.config.get("AVATAR_USER")
+
+        current_datetime = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        self.log_filepath = f"log/chatlog_{current_datetime}.txt"
+        if self.config.get("LOG") == "enabled":
+            self.chat_logger = ChatLogger(self.log_filepath)
 
         self.initUI()
-        # Define image paths as class member variables
-        self.config = load_config()
-        self.avatar_dst_gpt = self.config.get("AVATAR_DST_GPT")
-        self.avatar_user = self.config.get("AVATAR_USER")
+
         self.chatWithLLM_Demo()
 
     def initUI(self):
@@ -48,10 +56,6 @@ class ChatWindow(QScrollArea):
         # Set the content container as the viewport of the chat window
         self.setWidget(self.chatWindowWidgetContents)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-
-        current_datetime = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-        self.log_filepath = f"log/chatlog_{current_datetime}.txt"
-        self.chat_logger = ChatLogger(self.log_filepath)
 
     def chatWithLLM_Demo(self):
         """
@@ -98,6 +102,9 @@ class ChatWindow(QScrollArea):
         Returns:
             None
         """
+        if text == "":
+            return
+
         bubble = ChatBubble(text)
         hbox = QHBoxLayout()
         avatar = QLabel(self)
@@ -108,20 +115,36 @@ class ChatWindow(QScrollArea):
                     100, 100, Qt.KeepAspectRatio, Qt.SmoothTransformation
                 )
             )
-            hbox.addWidget(avatar)
-            hbox.addWidget(bubble)
+        elif side == "left-rag":
+            avatar.setPixmap(
+                QPixmap(self.avatar_dst_gpt).scaled(
+                    100, 100, Qt.KeepAspectRatio, Qt.SmoothTransformation
+                )
+            )
+        elif side == "left-pure":
+            avatar.setPixmap(
+                QPixmap(self.avatar_openai).scaled(
+                    100, 100, Qt.KeepAspectRatio, Qt.SmoothTransformation
+                )
+            )
         elif side == "right":
             avatar.setPixmap(
                 QPixmap(self.avatar_user).scaled(
                     100, 100, Qt.KeepAspectRatio, Qt.SmoothTransformation
                 )
             )
+        # Adjust widget addition order and alignment based on the side
+        if side in ["left", "left-rag", "left-pure"]:
+            hbox.addWidget(avatar)  # Add avatar first for left-side alignment
             hbox.addWidget(bubble)
-            hbox.addWidget(avatar)
+            hbox.setAlignment(Qt.AlignLeft)
+        else:  # For right and other unspecified sides
+            hbox.addWidget(bubble)
+            hbox.addWidget(avatar)  # Add avatar last for right-side alignment
+            hbox.setAlignment(Qt.AlignRight)
 
         hbox.setSpacing(10)
-        # Align the bubble to the left or right
-        hbox.setAlignment(Qt.AlignLeft if side == "left" else Qt.AlignRight)
+
         # Check if there is only one bubble in the chat layout
         if self.chat_layout.count() <= 1:
             self.chat_layout.setAlignment(Qt.AlignTop)
@@ -133,10 +156,9 @@ class ChatWindow(QScrollArea):
         # Call scrollToBottom after 100 milliseconds
         QTimer.singleShot(100, self.scrollToBottom)
 
-        # Add the message to the log
-        self.chat_logger.add_chat_to_log(text, side, tokens, cost)
-        # Update meta data in the log
-        self.chat_logger.log_meta_update()
+        if self.config.get("LOG") == "enabled":
+            # Add the message to the log and update
+            self.chat_logger.add_chat_to_log(text, side, tokens, cost)
 
     def scrollToBottom(self):
         """
@@ -155,4 +177,5 @@ class ChatWindow(QScrollArea):
         """
         self.config = load_config()
         self.avatar_dst_gpt = self.config.get("AVATAR_DST_GPT")
+        self.avatar_openai = self.config.get("AVATAR_OPENAI")
         self.avatar_user = self.config.get("AVATAR_USER")

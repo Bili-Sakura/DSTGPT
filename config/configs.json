@@ -1,10 +1,17 @@
 {
     "AVATAR_DST_GPT": "assets\\logo.jpg",
+    "AVATAR_OPENAI": "assets\\openai.png",
     "AVATAR_USER": "assets\\Avatar_User.jpg",
-    "BASE_MODEL": "gpt-3.5-turbo-16k-0613",
+    "BASE_MODEL": "gpt-3.5-turbo-0125",
     "SAMPLE_COURPUS": "data\\sample_data.json",
-    "TEMPERATURE": 0.0,
+    "TEMPERATURE": 0.7,
     "VECTORSTORE_FILEPATH": "database\\chroma.sqlite3",
     "VECTORSTORE_DIRECTORY": "database",
-    "RAG":"enabled"
+    "RAG": "both",
+    "TEMPLATE_TYPE": "default",
+    "PROMPT_TEMPLATE": "Answer the following question based on the provided knowledge: \n<knowledge>\n{context}\n</knowledge>\nQuestion: {input}",
+    "LOG": "enabled",
+    "KNOWLEDGE_SOURCES": [
+        "data\\sample_data.json"
+    ]
 }

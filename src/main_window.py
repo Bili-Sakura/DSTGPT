@@ -22,6 +22,7 @@ from PyQt5.QtWidgets import (
     QAction,
     QFileDialog,
     QMessageBox,
+    QDialog,
 )
 from PyQt5.QtGui import QPixmap, QPalette, QBrush, QImage, QPainter, QColor
 from PyQt5.QtCore import Qt, QTimer
@@ -31,6 +32,7 @@ from src.input_line import InputLine
 from src.llm import LLM
 from src.config import load_config, update_config, configUpdater
 from src.apikey_window import ApiKeyDialog
+from src.prompt_window import PromptInputDialog
 
 
 class MainWindow(QMainWindow):
@@ -45,9 +47,7 @@ class MainWindow(QMainWindow):
         self.initUI()
 
         # Create an instance of LLM class
-        self.llm = LLM(
-            base_model=self.config.get("BASE_MODEL"),
-        )
+        self.llm = LLM()
 
     def initUI(self):
         """
@@ -107,14 +107,17 @@ class MainWindow(QMainWindow):
         self.menuManager.createActionMenu(
             "Prompt Template",
             [
-                ("Use Weak Prompt", lambda: self.setPromptTemplate(type="weak")),
+                (
+                    "Use Weak Prompt",
+                    lambda: self.setPromptTemplate(template_type="weak"),
+                ),
                 (
                     "Use Strong Prompt:Default",
-                    lambda: self.setPromptTemplate(type="default"),
+                    lambda: self.setPromptTemplate(template_type="default"),
                 ),
                 (
                     "Self-Defined Prompt",
-                    lambda: self.setPromptTemplate(type="self-defined"),
+                    lambda: self.setPromptTemplate(template_type="self-defined"),
                 ),
             ],
         )
@@ -129,12 +132,29 @@ class MainWindow(QMainWindow):
             "RAG",
             [
                 (
-                    "Enable RAG:Default",
+                    "Enabled:Default",
                     self.config.get("RAG") == "enabled",
                 ),
                 (
-                    "Disable RAG",
+                    "Disabled",
                     self.config.get("RAG") == "disabled",
+                ),
+                (
+                    "Both:Compare Mode",
+                    self.config.get("RAG") == "both",
+                ),
+            ],
+        )
+        self.menuManager.createCheckableMenu(
+            "Log",
+            [
+                (
+                    "Enabled:Default",
+                    self.config.get("LOG") == "enabled",
+                ),
+                (
+                    "Disabled",
+                    self.config.get("LOG") == "disabled",
                 ),
             ],
         )
@@ -155,6 +175,14 @@ class MainWindow(QMainWindow):
                 temperature = actionText.split(":")[0]
                 update_config("TEMPERATURE", float(temperature))
 
+            elif menuName == "RAG":
+                rag_status = actionText.split(":")[0].lower()
+                update_config("RAG", rag_status)
+
+            elif menuName == "Log":
+                log_status = actionText.split(":")[0].lower()
+                update_config("LOG", log_status)
+
     def setAPIKey(self):
         """
         Opens a dialog to allow the user to set the API Key.
@@ -165,7 +193,7 @@ class MainWindow(QMainWindow):
         if api_key != "":
             set_key(dotenv_path, "OPENAI_API_KEY", api_key)
         if base_url != "":
-            set_key(dotenv_path, "OPENAI_BASE_URL", api_key)
+            set_key(dotenv_path, "OPENAI_BASE_URL", base_url)
 
     def initializeVectorstore(self):
         """
@@ -239,6 +267,9 @@ class MainWindow(QMainWindow):
                 QMessageBox.information(
                     None, "File Deleted", "Database has been deleted."
                 )
+                update_config("VECTORSTORE_FILEPATH", "")
+                update_config("VECTORSTORE_DIRECTORY", "")
+                update_config("KNOWLEDGE_SOURCES", [])
         else:
             QMessageBox.information(None, "File Not Found", "The file does not exist.")
 
@@ -278,8 +309,44 @@ class MainWindow(QMainWindow):
             update_config("AVATAR_DST_GPT", relative_path)
             self.chatWindow.update_avatar()
 
-    def setPromptTemplate(self, type):
-        print()
+    def setPromptTemplate(self, template_type):
+        """
+        Sets the prompt template based on the specified type.
+
+        Args:
+            type (str): The type of prompt template to set.
+
+        Returns:
+            None
+        """
+        if template_type == "weak":
+            new_template = (
+                "Answer the following question: \n"
+                "Question: {input}\n"
+                "Pay close attention to the chat context. The provided knowledge is also supported. \n"
+                "<knowledge>\n"
+                "{context}\n"
+                "</knowledge>"
+            )
+
+        elif template_type == "default":
+            new_template = (
+                "Answer the following question based on the provided knowledge: \n"
+                "<knowledge>\n"
+                "{context}\n"
+                "</knowledge>\n"
+                "Question: {input}"
+            )
+        elif template_type == "self-defined":
+            dialog = PromptInputDialog()
+            if dialog.exec_() == QDialog.Accepted:
+                new_template = dialog.getNewTemplate()
+
+        else:
+            raise ValueError(f"Invalid prompt template type: {template_type}")
+
+        update_config("PROMPT_TEMPLATE", new_template)
+        update_config("TEMPLATE_TYPE", template_type)
 
     def createStatusBar(self):
         """
@@ -289,8 +356,6 @@ class MainWindow(QMainWindow):
         self.statusbar.setStyleSheet(
             "background-color: rgba(255, 255, 255, 0.8);color: black"
         )
-        self.statusbar.setFixedHeight(25)
-        self.statusbar.setFocusPolicy(Qt.NoFocus)
         self.displayConfigInfo()
 
     def createChatWindow(self):
@@ -369,6 +434,7 @@ class MainWindow(QMainWindow):
         """
         Displays the configuration information in the status bar.
         """
+        self.config = load_config()  # Reload the config to get the latest updates
         config_info = (
             "Base Model: "
             + self.config.get("BASE_MODEL")
@@ -376,8 +442,21 @@ class MainWindow(QMainWindow):
             + str(self.config.get("TEMPERATURE"))
             + " | Vectorstore Directory: "
             + self.config.get("VECTORSTORE_DIRECTORY")
+            + " | Template Type: "
+            + self.config.get("TEMPLATE_TYPE")
+            + " | RAG: "
+            + self.config.get("RAG")
+            + (
+                " (You are using a pure LLM foundation model!)"
+                if self.config.get("RAG") == "disabled"
+                else ""
+            )
+            + "| Log: "
+            + self.config.get("LOG")
         )
+        QTimer.singleShot(0, self.statusbar.show)
         self.statusbar.showMessage(config_info)
+        QTimer.singleShot(20000, self.statusbar.hide)  # 20s
 
     @asyncSlot()
     async def onReturnPressed(self):
@@ -408,11 +487,24 @@ class MainWindow(QMainWindow):
         Returns:
             str: The answer to the question.
         """
+
+        load_config()
+        rag_status = self.config.get("RAG")
         with get_openai_callback() as cb:
-            llm_answer = await self.llm.get_answer_async(user_text)
+            llm_answers = await self.llm.get_answer_async(user_text, rag_status)
             tokens = cb.total_tokens
-            cost = cb.total_cost
+            dict_tokens = {
+                "prompt_tokens": cb.prompt_tokens,
+                "completion_tokens": cb.completion_tokens,
+            }
+            # cost=cb.total_cost
+            cost = self.llm.calculate_cost(dict_tokens)
+        if llm_answers["rag"] != "" and llm_answers["pure"] != "":
+            self.chatWindow.addMessage(llm_answers["rag"], "left-rag", tokens, cost)
+            self.chatWindow.addMessage(llm_answers["pure"], "left-pure")
 
-        self.chatWindow.addMessage(llm_answer, "left", tokens, cost)
+        elif llm_answers["pure"] != "":
+            self.chatWindow.addMessage(llm_answers["pure"], "left-pure", tokens, cost)
 
-        return llm_answer
+        elif llm_answers["rag"] != "":
+            self.chatWindow.addMessage(llm_answers["rag"], "left-rag", tokens, cost)
