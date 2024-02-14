@@ -1,0 +1,4 @@
+#. STRINGS.NAMES.DEERCLOPS
+msgctxt "STRINGS.NAMES.DEERCLOPS"
+msgid "Deerclops"
+msgstr "独眼巨鹿"
