@@ -5,7 +5,7 @@
 
 [![Github](https://img.shields.io/badge/GitHub-DST&#8209;GPT-000000?logo=github)](https://github.com/Bili-Sakura/DST-GPT)
 [![Bilibili](https://img.shields.io/badge/Bilibili-DST&#8209;GPT-00A1D6?logo=bilibili&logoColor=white)](https://www.bilibili.com/)
-[![Huggingface](https://img.shields.io/badge/Hugging%20Face-DST&#8209;GPT-FF9900?logo=hugging%20face&logoColor=white)](https://huggingface.co/)
+[![Huggingface](https://img.shields.io/badge/Hugging%20Face-Waiting...-FF9900?logo=hugging%20face&logoColor=white)](https://huggingface.co/)
 
 ## Introduction
 
@@ -101,8 +101,8 @@ Wait for assessment...
 
 ## Data
 
-In this repo, we share the corpus used in DST-GPT, be it `refined_data.json`:
-Raw data is crawled from Wiki Fandom on DST webpages with little preprocess. Refined data is restructed from raw data.
+In this repo, we share the corpus used in DST-GPT, be it `refined_data.json`,`chinese_dst.txt`,`chinese_ds.txt`:
+Raw data is crawled from Wiki Fandom on DST webpages with little preprocess. `Refined_data.json` is restructed from raw data.
 
 ```json
 ./data/refined_data.json
@@ -131,6 +131,17 @@ Raw data is crawled from Wiki Fandom on DST webpages with little preprocess. Ref
 },...
 ]
 ```
+
+`chinese_dst.txt` and `chinese_ds.txt` are directly copied from DST/DS source files (originally in .po) which contain the translated strings for all the text seen in the game. Here is an example of element in the txt file.
+```txt
+#. STRINGS.NAMES.DEERCLOPS
+msgctxt "STRINGS.NAMES.DEERCLOPS"
+msgid "Deerclops"
+msgstr "独眼巨鹿"
+
+#. STRINGS.NAMES.xxx
+...
+```
 ## Auto Log
 
 **The chatlog and meta infomation are automatically saved in `./log/xx.txt`**
@@ -138,7 +149,7 @@ Raw data is crawled from Wiki Fandom on DST webpages with little preprocess. Ref
 ```txt
 - Start Time: 2024-02-14 15:56:02
 - Message Counts: 3
-- Knowledge Sources: data\sample_data.json, data\chinese_sample.txt, data\sample_data.json, data\sample_data.json
+- Knowledge Sources: data\sample_data.json, data\chinese_sample.txt
 - Chat Tokens: 1109
 - Cost: 0.0033360000000000004
 - End Time: 2024-02-14 15:56:51
@@ -154,48 +165,70 @@ DST-GPT: Hello! How can I assist you today?
 
 **1. Base Model**
 
-![GUI SetBaseModels](./assets/GUI_SetBaseModels.png)
+Select the OpenAI foundation model for DST-GPT.
 
-**2. API Key**
+**2. Temperature**
 
-![GUI SetAPIKeys](./assets/GUI_SetAPIKeys.png)
+Set the temperature for the foundation model. The higher the more creative, the lower the more deterministic, ranging from [0,1].
 
-**3. Temperature**
+**3. API Key**
 
-![GUI SetTemperature](./assets/GUI_SetTemperature.png)
+Configure your open_api_key as well as open_base_url from widget.
 
 **4. Vectorstore**
 
-If you already have a Chroma vectorstore with a local file like `chroma.sqlite3`, you can place it in `./database/` to construct your own LLMs application.
+If you already have a Chroma vectorstore with a local file like `chroma.sqlite3`, you can place it in `./database/`(or your database directory) to construct your own LLMs application.
 
-**Configure vectorstore**
+**Initialize vectorstore**
 
-![GUI configureVectorstore](./assets/GUI_configureVectorstore.png)
+Create a `chroma.sqlite3` new If there is no existing on under the database directory.
 
 **Add corpus to vectorstore**
 
-![GUI addCorpusToVectorstore](./assets/GUI_addCorpusToVectorstore.png)
+You are able to add new data source(.json,.txt,.md,.py) into exisiting database. Large files can be time-cosuming, you should check the console log time to time, to see the veterization process.
 
 **Clear vectorstore**
 
-![GUI clearVectorstore](./assets/GUI_clearVectorstore.png)
+Delete the `chroma.sqlite3` from database directory.
 
-**5.Prompt Template**
+**5. Prompt Template**
 
-![GUI setPromptTemplate](./assets/GUI_setPromptTemplate)
+Prompt is the vital part for LLMs response. The default prompt used in DST-GPT is as follow:
 
-### Icons
+```python
+"""
+Answer the following question based on the provided knowledge: <knowledge>
+{context}
+</knowledge>
+Question: {input}
+"""
+```
+`{context}` and `{input}` are key parameter passed to llm. Users are allowed to self-define their prompt for better performance.
 
-Set your own Icons.
+![SetPrompt](./assets/GUI_SetPrompt.png)
 
-![GUI SetIcons](./assets/GUI_SetIcons.png)
+**6. Icons**
+
+Set your own Icons. Here are the default icons in assets.
+
 
 <div style="display: flex; flex-direction: column; align-items: left;">
     Model Icon 1<div style="text-align:left;"><img src="./assets/openai_white.png" alt="OpenAI" style="width: 50px; height: 50px;"></div>Model Icon 2
     <div style="text-align:left;"><img src="./assets/logo.jpg" alt="DST-GPT" style="width: 50px; height: 50px"></div>User Icon 1
-    <div style="text-align:left;"><img src="./assets/Avatar_User.jpg" alt="Sakura" style="width: 50px; height: 50px;"></div>User Icon 2
-    <div style="text-align:left;"><img src="./assets/Avatar_User.jpg" alt="Sakura" style="width: 50px; height: 50px"></div>
-</div>
+    <div style="text-align:left;"><img src="./assets/Avatar_User.jpg" alt="Sakura" style="width: 50px; height: 50px;">
+</div>  
+
+
+**7. RAG**  
+
+We provide three modes:
+- Enabled RAG: Give a response based on injected knowledge only.
+- Disabled RAG: Act the same as gpt model.
+- Both: Give the both answer from gpt base model and DST-GPT, this is useful for assessment.
+
+**8. Log**
+
+Whetehr to log your chat messages and meta data or not.
 
 ##  Released
 
@@ -203,9 +236,48 @@ DST-GPT is released in two ways: as an executable (.exe) file, providing a stand
 
 ### Executable Files
 
+```markdown
+# structure
+_internal
+    - python packages...
+assets
+    - pictures...
+data
+    - sample_data.json  
+    - chinese_sample.txt
+    - other data....
+database
+    - chroma.sqlite3
+log(optional)
+    - log_xxx.txt...
+.env
+
+```
+
+Download file click [here](). The executive files contains component as follow:
+
+**Core Components**
+
+`main.exe`(.exe)  
+`_internal`(folder)  
+`.env`  
+
+**Required Components:**   
+`chroma.sqlite3`(~1GB) 
+`configs.json`  
+`assets`(folder)  
+`sample_data.json`  
+`chinese_sample.txt`  
+
+Others:  
+`refined_data.json`(~50MB)  
+`chinese_ds.txt & chinese_dst.txt`(~20MB)
+
 ### Hugging Face
 
-[![Huggingface](https://img.shields.io/badge/Hugging%20Face-DST&#8209;GPT-FF9900?logo=hugging%20face&logoColor=white)](https://huggingface.co/)
+Waiting...
+
+>Hopefully, we may provide an API to call the DST-GPT chat function in the future.
 
 ## License
 DST-GPT is a chatbot intended for non-commercial use only, subject to the model License of OpenAI and the Terms of Use of the data generated by OpenAI. Please contact us if you find any potential violations. The code is released under the MIT License. The corpus data for DST-GPT is updating occasionally, if you want to subscribe the data, you can either email [bili_sakura@zju.edu.cn](mailto:bili_sakura@zju.edu.cn) or contact with me on Bilibili.
@@ -216,14 +288,13 @@ DST-GPT is a chatbot intended for non-commercial use only, subject to the model 
 
 ### Wait to do list
 
+**将模型以API形式封装，接入DST游戏模组**
 
 ### Bugs
 
 **消息气泡"Thiking..."需要被移除;气泡布局需要调整**
 
 ### Future
-
-**将模型以API形式封装，接入DST游戏模组**
 
 **重载信息显示函数，支持多模态输出**
 
