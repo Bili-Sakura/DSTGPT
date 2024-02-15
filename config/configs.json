@@ -10,7 +10,7 @@
     "RAG": "both",
     "TEMPLATE_TYPE": "default",
     "PROMPT_TEMPLATE": "Answer the following question based on the provided knowledge: \n<knowledge>\n{context}\n</knowledge>\nQuestion: {input}",
-    "LOG": "enabled",
+    "LOG": "disabled",
     "KNOWLEDGE_SOURCES": [
         "data\\sample_data.json",
         "data\\chinese_sample.txt"
