@@ -9,6 +9,16 @@ from src.llm import LLM
 
 # Initialize the LLM model
 llm = LLM()
+BASE_MODEL_LIST = [
+    "gpt-3.5-turbo",
+    "gpt-3.5-turbo-0125",
+    "gpt-3.5-turbo-0301",
+    "gpt-3.5-turbo-0613",
+    "gpt-3.5-turbo-1106",
+    "gpt-3.5-turbo-instruct",
+    "gpt-3.5-turbo-16k",
+    "gpt-3.5-turbo-16k-0613",
+]
 
 
 def process_input(
@@ -24,6 +34,9 @@ def process_input(
 
 # Define the Gradio interface using Blocks
 with gr.Blocks() as demo:
+    gr.Markdown(
+        "<h2 style='text-align: center; font-size: 24px;'>🔥 DST-GPT : A Large Language Model for Don't Starve & Don't Starve Together</h2>"
+    )
     # Chatbox display at the top
     chatbox = gr.Textbox(
         label="Chat Window",
@@ -44,7 +57,7 @@ with gr.Blocks() as demo:
             api_key_input = gr.Textbox(label="API Key")
             base_url_input = gr.Textbox(label="Base URL")
             base_model_input = gr.Dropdown(
-                label="Base Model", choices=["Model 1", "Model 2", "Model 3"]
+                label="Base Model", choices=BASE_MODEL_LIST
             )  # Placeholder model options
         with gr.Column():
             model_temperature_input = gr.Slider(
