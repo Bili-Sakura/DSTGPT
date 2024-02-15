@@ -40,7 +40,7 @@ class LLM:
         load_dotenv()
 
         self.api_key = os.getenv("OPENAI_API_KEY")
-        self.base_url = os.getenv("OPENAI_BASE_URL", None)
+        self.base_url = os.getenv("OPENAI_BASE_URL") or None
         self.base_model = self.config.get("BASE_MODEL")
         self.temperature = self.config.get("TEMPERATURE")
         self.prompt_template = self.config.get("PROMPT_TEMPLATE")

@@ -72,7 +72,7 @@ class ApiKeyDialog(QDialog):
         dialog = ApiKeyDialog()
         if dialog.exec_() == QDialog.Accepted:
             api_key = dialog.api_key_input.text()
-            base_url = dialog.base_url_input.text()
+            base_url = dialog.base_url_input.text() or None
             return api_key, base_url
         else:
             return "", ""
