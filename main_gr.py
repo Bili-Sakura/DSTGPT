@@ -1,36 +1,80 @@
 # pylint: disable=E0611,C0103,C0303
 """
+A Gradio interface for a chatbot using the LLM model from 'src.llm' module.
+This version updates the user-defined settings by setting the range for 'Base Model Temperature' to 0-1,
+and replacing 'Prompt Template' with a 'Mode' control providing three options.
 """
 import gradio as gr
-from src.llm import LLM  # 确保这个路径正确
-from src.config import load_config, update_config, configUpdater
+from src.llm import LLM
 
-# 假设LLM类不依赖于任何PyQt5组件
+# Initialize the LLM model
 llm = LLM()
 
 
-async def process_input(user_text):
+def process_input(
+    user_text, api_key, base_url, base_model, model_temperature, mode, avatar_user
+):
     """
-    处理用户输入并返回LLM的响应。
-    这里简化了从getLLMAnswer函数获取答案的逻辑。
+    Process user input along with user-defined settings and return a response.
+    This function should be replaced with actual logic for processing user input using the LLM model.
     """
-    load_config()  # 确保这个函数可以在不依赖PyQt的情况下工作
-    rag_status = "enabled"  # 假设一个默认值，或者通过其他方式设置
-    llm_answers = await llm.get_answer_async(user_text, rag_status)
-
-    # 简化响应，只返回纯RAG的回答（如果可用）
-    return llm_answers.get("pure")
+    # Placeholder for processing logic with LLM and user-defined settings
+    return user_text  # Placeholder for actual LLM response
 
 
-# 创建Gradio界面
-iface = gr.Interface(
-    fn=process_input,
-    inputs=gr.Textbox(lines=2, placeholder="Input your questions..."),
-    outputs="text",
-    title="DST-GPT",
-    description="请输入您的问题，系统将自动回答。",
-)
+# Define the Gradio interface using Blocks
+with gr.Blocks() as demo:
+    # Chatbox display at the top
+    chatbox = gr.Textbox(
+        label="Chat Window",
+        lines=10,
+        interactive=False,
+        value="Welcome to the chatbot!",
+    )
 
-# 启动Gradio界面
-if __name__ == "__main__":
-    iface.launch()
+    # User input textbox
+    user_input = gr.Textbox(label="Enter your question")
+
+    # Submission button
+    submit_button = gr.Button("Submit")
+
+    # User-defined settings in two columns at the bottom
+    with gr.Row():
+        with gr.Column():
+            api_key_input = gr.Textbox(label="API Key")
+            base_url_input = gr.Textbox(label="Base URL")
+            base_model_input = gr.Dropdown(
+                label="Base Model", choices=["Model 1", "Model 2", "Model 3"]
+            )  # Placeholder model options
+        with gr.Column():
+            model_temperature_input = gr.Slider(
+                label="Base Model Temperature",
+                minimum=0,
+                maximum=1,
+                step=0.01,
+                value=0.7,
+            )
+            mode_input = gr.Radio(
+                label="Mode",
+                choices=["DST-GPT only", "OpenAI GPT only", "Comparation Mode"],
+                value="DST-GPT only",
+            )
+            avatar_user_input = gr.Textbox(label="Avatar: User")
+
+    # Define the action to take when the submit button is clicked
+    submit_button.click(
+        fn=process_input,
+        inputs=[
+            user_input,
+            api_key_input,
+            base_url_input,
+            base_model_input,
+            model_temperature_input,
+            mode_input,
+            avatar_user_input,
+        ],
+        outputs=chatbox,
+    )
+
+# Launch the Gradio interface
+demo.launch()
