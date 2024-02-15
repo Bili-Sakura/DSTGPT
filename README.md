@@ -132,7 +132,8 @@ Raw data is crawled from Wiki Fandom on DST webpages with little preprocess. `Re
 ]
 ```
 
-`chinese_dst.txt` and `chinese_ds.txt` are directly copied from DST/DS source files (originally in .po) which contain the translated strings for all the text seen in the game. Here is an example of element in the txt file.
+`chinese_dst.txt` and `chinese_ds.txt` are directly copied from DST/DS source files (originally in .po) which contain the translation for all the text seen in the game. It is supposed to augument the multi-linguo capability for DST-GPT. Here is an example of element in the txt file.  
+
 ```txt
 #. STRINGS.NAMES.DEERCLOPS
 msgctxt "STRINGS.NAMES.DEERCLOPS"
@@ -142,22 +143,7 @@ msgstr "独眼巨鹿"
 #. STRINGS.NAMES.xxx
 ...
 ```
-## Auto Log
 
-**The chatlog and meta infomation are automatically saved in `./log/xx.txt`**
-
-```txt
-- Start Time: 2024-02-14 15:56:02
-- Message Counts: 3
-- Knowledge Sources: data\sample_data.json, data\chinese_sample.txt
-- Chat Tokens: 1109
-- Cost: 0.0033360000000000004
-- End Time: 2024-02-14 15:56:51
-## Chat Log
-DST-GPT: Hi! I am DST-GPT, what can I help you?
-User: hi
-DST-GPT: Hello! How can I assist you today?
-```
 
 ## Configurations
 
@@ -229,6 +215,20 @@ We provide three modes:
 **8. Log**
 
 Whetehr to log your chat messages and meta data or not.
+The chatlog and meta infomation are automatically saved in `./log/xx.txt`
+
+```txt
+- Start Time: 2024-02-14 15:56:02
+- Message Counts: 3
+- Knowledge Sources: data\sample_data.json, data\chinese_sample.txt
+- Chat Tokens: 1109
+- Cost: 0.0033360000000000004
+- End Time: 2024-02-14 15:56:51
+## Chat Log
+DST-GPT: Hi! I am DST-GPT, what can I help you?
+User: hi
+DST-GPT: Hello! How can I assist you today?
+```
 
 ##  Released
 
@@ -288,13 +288,18 @@ DST-GPT is a chatbot intended for non-commercial use only, subject to the model 
 
 ### Wait to do list
 
-**将模型以API形式封装，接入DST游戏模组**
+**更新README.md 的Case部分**
+
+**完成PPT和文案**
 
 ### Bugs
 
 **消息气泡"Thiking..."需要被移除;气泡布局需要调整**
 
 ### Future
+
+
+**将模型以API形式封装，接入DST游戏模组**
 
 **重载信息显示函数，支持多模态输出**
 
