@@ -166,7 +166,7 @@ Create a `chroma.sqlite3` new If there is no existing on under the database dire
 
 **Add corpus to vectorstore**
 
-You are able to add new data source(.json,.txt,.md,.py) into exisiting database. Large files can be time-cosuming, you should check the console log time to time, to see the veterization process.
+You are able to add new data source(.json,.txt,.md,.py,.lua) into exisiting database. Large files can be time-cosuming, you should check the console log time to time, to see the veterization process.
 
 **Clear vectorstore**
 
@@ -300,3 +300,5 @@ DST-GPT is a chatbot intended for non-commercial use only, subject to the model 
 **收集格式化问答语料，进行模型性能评估**
 
 **收集格式化问答语料，尝试监督微调**
+
+**建立Benchmark Baseline**
