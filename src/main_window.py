@@ -468,6 +468,7 @@ class MainWindow(QMainWindow):
         self.askLLM(user_text)
         self.input_line.clear()
         await self.getLLMAnswer(user_text)
+        self.chatWindow.removeMessage("Thinking...")
 
     def askLLM(self, user_text):
         """
@@ -497,7 +498,7 @@ class MainWindow(QMainWindow):
                 "prompt_tokens": cb.prompt_tokens,
                 "completion_tokens": cb.completion_tokens,
             }
-            # cost=cb.total_cost
+            # cost = cb.total_cost
             cost = self.llm.calculate_cost(dict_tokens)
         if llm_answers["rag"] != "" and llm_answers["pure"] != "":
             self.chatWindow.addMessage(llm_answers["rag"], "left-rag", tokens, cost)

@@ -82,18 +82,13 @@ Conguratulation!  You have started the DST-GPT!  Try to chat with DST-GPT!
 
 |Case 1|Case 2|Case 3|
 |-|-|-|
-|![case1](./assets/DST-GPT_Application_Demo.png)|![case2](./assets/DST-GPT_Application_Demo.png)|![case3](./assets/DST-GPT_Application_Demo.png)|
+|![case1](./assets/case1.png)|![case2](./assets/case2.png)|![case3](./assets/case3.png)|
 
 
-- **Answer:**
-    - **Question:** Q1
-    - **Answer:** A1
-- **Answer and Explain:**
-    - **Question:** Q2
-    - **Answer:** A2
-- **Answer with comparison:**
-    - **Question:** A3
-    - **Answer:** Q3
+1. Solid answers with accurate data 
+2. Chain of thought with retrival 
+3. Multi-lingual capability
+
 
 ## Evaluation
 
@@ -102,7 +97,7 @@ Wait for assessment...
 ## Data
 
 In this repo, we share the corpus used in DST-GPT, be it `refined_data.json`,`chinese_dst.txt`,`chinese_ds.txt`:
-Raw data is crawled from Wiki Fandom on DST webpages with little preprocess. `Refined_data.json` is restructed from raw data.
+Raw data is crawled from Wiki Fandom on ~ **5000** DST webpages with little preprocess. `Refined_data.json` is restructed from raw data.
 
 ```json
 ./data/refined_data.json
@@ -288,13 +283,12 @@ DST-GPT is a chatbot intended for non-commercial use only, subject to the model 
 
 ### Wait to do list
 
-**更新README.md 的Case部分**
 
-**完成PPT和文案**
+**完成文案**
 
 ### Bugs
 
-**消息气泡"Thiking..."需要被移除;气泡布局需要调整**
+**气泡布局需要调整**
 
 ### Future
 
