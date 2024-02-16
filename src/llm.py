@@ -212,7 +212,7 @@ class LLM:
             )
             return
 
-        if file_type not in [".json", ".txt", ".py", ".md"]:
+        if file_type not in [".json", ".txt", ".py", ".md", ".lua"]:
             QMessageBox.warning(
                 None, "Warning", f"Invalid source file type: {file_type}!"
             )

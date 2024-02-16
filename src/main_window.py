@@ -242,7 +242,7 @@ class MainWindow(QMainWindow):
             self,
             "Select Source File",
             "",
-            "Source Files (*.txt *.json *.md *.py)",
+            "Source Files (*.txt *.json *.md *.py *.lua)",
             options=options,
         )
         if fileName:
