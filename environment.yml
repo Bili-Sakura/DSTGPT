@@ -15,7 +15,7 @@ dependencies:
   - bleach=4.1.0=pyhd3eb1b0_0
   - brotli-python=1.0.9=py38hd77b12b_7
   - ca-certificates=2023.12.12=haa95532_0
-  - certifi=2023.11.17=py38haa95532_0
+  - certifi=2024.2.2=py38haa95532_0
   - cffi=1.16.0=py38h2bbff1b_0
   - charset-normalizer=2.0.4=pyhd3eb1b0_0
   - colorama=0.4.6=py38haa95532_0
@@ -139,6 +139,7 @@ dependencies:
   - pip:
     - aiohttp==3.9.3
     - aiosignal==1.3.1
+    - altair==5.2.0
     - annotated-types==0.6.0
     - asgiref==3.7.2
     - async-timeout==4.0.3
@@ -147,20 +148,27 @@ dependencies:
     - bcrypt==4.1.2
     - build==1.0.3
     - cachetools==5.3.2
+    - charset-normalizer==3.3.2
     - chroma-hnswlib==0.7.3
     - chromadb==0.4.22
     - click==8.1.7
     - coloredlogs==15.0.1
+    - contourpy==1.1.1
+    - cycler==0.12.1
     - dataclasses-json==0.6.4
     - deprecated==1.2.14
     - distro==1.9.0
     - fastapi==0.109.1
+    - ffmpy==0.3.2
     - filelock==3.13.1
     - flatbuffers==23.5.26
+    - fonttools==4.48.1
     - frozenlist==1.4.1
     - fsspec==2023.12.2
     - google-auth==2.27.0
     - googleapis-common-protos==1.62.0
+    - gradio==4.19.0
+    - gradio-client==0.10.0
     - graphlib-backport==1.0.3
     - greenlet==3.0.3
     - grpcio==1.60.1
@@ -173,13 +181,18 @@ dependencies:
     - importlib-metadata==6.11.0
     - jsonpatch==1.33
     - jsonpointer==2.4
+    - kiwisolver==1.4.5
     - kubernetes==29.0.0
-    - langchain==0.1.5
-    - langchain-community==0.0.17
-    - langchain-core==0.1.18
-    - langchain-openai==0.0.5
-    - langsmith==0.0.86
+    - langchain==0.1.4
+    - langchain-community==0.0.16
+    - langchain-core==0.1.16
+    - langchain-openai==0.0.4
+    - langsmith==0.0.87
+    - markdown-it-py==3.0.0
+    - markdown2==2.4.12
     - marshmallow==3.20.2
+    - matplotlib==3.7.4
+    - mdurl==0.1.2
     - mmh3==4.1.0
     - monotonic==1.6
     - mpmath==1.3.0
@@ -199,7 +212,10 @@ dependencies:
     - opentelemetry-sdk==1.22.0
     - opentelemetry-semantic-conventions==0.43b0
     - opentelemetry-util-http==0.43b0
+    - orjson==3.9.14
     - packaging==23.2
+    - pandas==2.0.3
+    - pillow==10.2.0
     - posthog==3.3.4
     - protobuf==4.25.2
     - pulsar-client==3.4.0
@@ -207,6 +223,8 @@ dependencies:
     - pyasn1-modules==0.3.0
     - pydantic==2.6.0
     - pydantic-core==2.16.1
+    - pydub==0.25.1
+    - pyparsing==3.1.1
     - pypika==0.48.9
     - pyproject-hooks==1.0.0
     - pyqt5-plugins==5.15.9.2.3
@@ -214,24 +232,34 @@ dependencies:
     - pyqt5-tools==5.15.9.3.3
     - pyreadline3==3.4.1
     - python-dotenv==1.0.1
+    - python-multipart==0.0.9
     - qasync==0.27.1
     - qt5-applications==5.15.2.2.3
     - qt5-tools==5.15.2.1.3
     - regex==2023.12.25
     - requests-oauthlib==1.3.1
+    - rich==13.7.0
     - rsa==4.9
+    - ruff==0.2.1
+    - semantic-version==2.10.0
+    - shellingham==1.5.4
     - sqlalchemy==2.0.25
     - starlette==0.35.1
     - sympy==1.12
     - tenacity==8.2.3
     - tiktoken==0.5.2
     - tokenizers==0.15.1
+    - tomlkit==0.12.0
+    - toolz==0.12.1
     - tqdm==4.66.1
     - typer==0.9.0
     - typing-inspect==0.9.0
+    - tzdata==2024.1
+    - urllib3==2.2.0
+    - uuid==1.30
     - uvicorn==0.27.0.post1
     - watchfiles==0.21.0
-    - websockets==12.0
+    - websockets==11.0.3
     - wrapt==1.16.0
     - yarl==1.9.4
 prefix: C:\ProgramData\Anaconda3\envs\DST-GPT

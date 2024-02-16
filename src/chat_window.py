@@ -65,7 +65,7 @@ class ChatWindow(QScrollArea):
 
     def removeMessage(self, target_text):
         """
-        Removes a message from the chat window.
+        Removes a message and its associated avatar from the chat window.
 
         Args:
             target_text (str): The text of the message to be removed.
@@ -73,21 +73,40 @@ class ChatWindow(QScrollArea):
         Returns:
             None
         """
-        bubbles_to_remove = []
+        # Track the layouts to be removed
+        layouts_to_remove = []
+
+        # Iterate through the chat layout items in reverse order
         for i in range(self.chat_layout.count() - 1, -1, -1):
             layout_item = self.chat_layout.itemAt(i)
             if layout_item is not None:
-                layout = layout_item.layout()
-                if layout is not None:
-                    bubble_widget = layout.itemAt(1).widget()
-                    if (
-                        isinstance(bubble_widget, ChatBubble)
-                        and bubble_widget.text() == target_text
-                    ):
-                        bubbles_to_remove.append(layout)
+                # Check if the layout item is a QHBoxLayout instance
+                if isinstance(layout_item.layout(), QHBoxLayout):
+                    hbox_layout = layout_item.layout()
 
-        for bubble_layout in bubbles_to_remove:
-            bubble_layout.setParent(None)
+                    # Check each widget in the QHBoxLayout
+                    for j in range(hbox_layout.count()):
+                        widget = hbox_layout.itemAt(j).widget()
+                        # If the widget is a ChatBubble and its text matches target_text
+                        if (
+                            isinstance(widget, ChatBubble)
+                            and widget.text == target_text
+                        ):
+                            layouts_to_remove.append(hbox_layout)
+                            break
+
+        # Remove the identified QHBoxLayouts and their widgets
+        for hbox_layout in layouts_to_remove:
+            # Remove each widget from the layout and then delete it
+            while hbox_layout.count():
+                item = hbox_layout.takeAt(0)
+                widget = item.widget()
+                if widget is not None:
+                    widget.deleteLater()
+            # Remove the layout from the parent layout
+            self.chat_layout.removeItem(hbox_layout)
+            # Delete the QHBoxLayout object
+            hbox_layout.deleteLater()
 
     def addMessage(self, text, side, tokens=0, cost=0):
         """
