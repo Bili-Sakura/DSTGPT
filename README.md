@@ -300,3 +300,5 @@ DST-GPT is a chatbot intended for non-commercial use only, subject to the model 
 **收集格式化问答语料，进行模型性能评估**
 
 **收集格式化问答语料，尝试监督微调**
+
+**建立Benchmark Baseline**
