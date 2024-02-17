@@ -129,6 +129,7 @@ class MainWindow(QMainWindow):
             [
                 ("Initialize Vectorstore", self.initializeVectorstore),
                 ("Add Corpus to Vectorstore", self.addCorpusToVectorstore),
+                ("Add Corpus Folder to Vectorstore", self.addCorpusFolderToVectorstore),
                 ("Clear Vectorstore", self.clearVectorstore),
             ],
         )
@@ -274,9 +275,21 @@ class MainWindow(QMainWindow):
             options=options,
         )
         if fileName:
-            source_path = os.path.relpath(fileName)
-            file_type = os.path.splitext(source_path)[1]
-            self.llm.update_vectorstore(source_path, file_type)
+            file_path = os.path.relpath(fileName)
+            self.llm.update_vectorstore(file_path)
+
+    def addCorpusFolderToVectorstore(self):
+        """
+        Opens a file dialog to allow the user to select a new source folder and updates the vectorstore.
+        """
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        directory = QFileDialog.getExistingDirectory(
+            self, "Select Source Folder", options=options
+        )
+        if directory:
+            folder_path = os.path.relpath(directory)
+            self.llm.update_vectorstore(folder_path)
 
     def clearVectorstore(self):
         """

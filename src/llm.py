@@ -132,71 +132,7 @@ class LLM:
             answer["pure"] = response_pure.content
         return answer
 
-    def vecterize_corpus(self, corpus_filepath, file_type):
-        """
-        Vectorizes the corpus data from the specified file.
-
-        Args:
-
-        """
-        if file_type == ".json":
-            with open(corpus_filepath, "r", encoding="utf-8") as file:
-                corpus_data = json.load(file)
-
-            # process large json file
-            for i, data in enumerate(corpus_data):
-                # Splitting text into 1500-character chunks with 100-character overlap
-                chunk_size = 1500
-                overlap = 100
-                chunks = [
-                    data["text"][i : i + chunk_size]
-                    for i in range(0, len(data["text"]), chunk_size - overlap)
-                ]
-                metadata = [{k: v for k, v in data.items() if k != "text"}]
-
-                self.stored_vectors.add_texts(
-                    texts=chunks,
-                    metadatas=metadata,
-                )
-
-                if i % 10 == 0:
-                    if i == 0:
-                        print("Start Process Json Corpus File!")
-                    else:
-                        print(f"Processed {i} Items in Corpus!")
-
-        elif file_type in [".txt", ".md", ".py", ".lua"]:
-            with open(corpus_filepath, "r", encoding="utf-8") as file:
-                corpus_data = file.read()
-            if file_type == ".md":
-                corpus_data = BeautifulSoup(
-                    markdown2.markdown(corpus_data), "html.parser"
-                ).get_text()
-
-            corpus_length = len(corpus_data)
-            print(f"Processing Text Corpus File with {corpus_length} Characters...")
-            # Splitting text into 1500-character chunks with 100-character overlap
-            chunk_size = 1500
-            overlap = 100
-            chunks = [
-                corpus_data[i : i + chunk_size]
-                for i in range(0, corpus_length, chunk_size - overlap)
-            ]
-            num_chunks = len(chunks)
-            for i in range(0, num_chunks, 10):
-                chunk_subset = chunks[i : i + 10]
-                self.stored_vectors.add_texts(
-                    texts=chunk_subset,
-                )
-                print(
-                    f"Processed {i + len(chunk_subset)}/{num_chunks} Items in Corpus!"
-                )
-            print(f"Successed in Adding {corpus_length} Characters into Vectorstore!")
-
-        print("Vectorization Finished!")
-        update_config("KNOWLEDGE_SOURCES", corpus_filepath)
-
-    def update_vectorstore(self, source_path, file_type):
+    def update_vectorstore(self, source_path):
         """
         Update the vector store with data from the specified source file.
 
@@ -218,13 +154,92 @@ class LLM:
             )
             return
 
-        if file_type not in [".json", ".txt", ".py", ".md", ".lua"]:
-            QMessageBox.warning(
-                None, "Warning", f"Invalid source file type: {file_type}!"
-            )
-            return
+        if os.path.isdir(source_path):
+            self.vectorize_folder_contents(source_path)
+        else:
+            file_type = os.path.splitext(source_path)[1]
+            if file_type not in [".json", ".txt", ".py", ".md", ".lua"]:
+                QMessageBox.warning(
+                    None, "Warning", f"Invalid source file type: {file_type}!"
+                )
+                return
+            self.vecterize_corpus(source_path, file_type)
 
-        self.vecterize_corpus(source_path, file_type)
+    def vectorize_folder_contents(self, folder_path):
+        """
+        Vectorizes the contents of all valid files in the given folder path.
+
+        Args:
+            folder_path (str): The path to the folder containing files to be vectorized.
+        """
+        # 遍历指定文件夹下的所有文件和子文件夹
+        for root, dirs, files in os.walk(folder_path):
+            for file in files:
+                # 构建完整的文件路径
+                file_path = os.path.join(root, file)
+                # 提取文件扩展名以判断文件类型
+                _, file_extension = os.path.splitext(file)
+                # 检查是否为支持的文件类型
+                if file_extension in [".json", ".txt", ".md", ".py", ".lua"]:
+                    # 调用重构后的 vecterize_corpus 方法来处理文件
+                    self.vecterize_corpus(file_path, file_extension)
+
+    def vecterize_corpus(self, file_path, file_type):
+        """
+        Vectorizes the corpus data from the specified file.
+
+        Args:
+            file_path (str): The path to the file.
+            file_type (str): The type of the file (e.g., .json, .txt, .md, .py, .lua).
+        """
+        # 根据文件类型处理文件内容
+        if file_type == ".json":
+            with open(file_path, "r", encoding="utf-8") as file:
+                corpus_data = json.load(file)
+                # 假设 corpus_data 是一个列表，每个元素是一个包含 'text' 键的字典
+                for data in corpus_data:
+                    text_content = data["text"]
+                    metadata = [{k: v for k, v in data.items() if k != "text"}]
+                    self.add_to_vectorstore(corpus_data=text_content, metadata=metadata)
+                    print(f"Processed JSON file: {file_path}")
+
+        elif file_type in [".txt", ".md", ".py", ".lua"]:
+            with open(file_path, "r", encoding="utf-8") as file:
+                text_content = file.read()
+                if file_type == ".md":
+                    text_content = BeautifulSoup(
+                        markdown2.markdown(corpus_data), "html.parser"
+                    ).get_text()
+                self.add_to_vectorstore(corpus_data=text_content)
+                print(f"Processed text-based file: {file_path}")
+
+        print(f"File '{file_path}' is vecterizied.")
+        update_config("KNOWLEDGE_SOURCES", file_path)
+
+    # 示例：向数据库添加矢量化的文本内容的方法
+    def add_to_vectorstore(
+        self, corpus_data, metadata=None, chunk_size=1500, overlap=100
+    ):
+        """
+        Adds the vectorized text content to the vector store.
+
+        Args:
+            corpus_data (str): The text content to be vectorized and added.
+        """
+        corpus_length = len(corpus_data)
+        print(f"Processing Text Corpus File with {corpus_length} Characters...")
+        # Splitting text into 1500-character chunks with 100-character overlap
+        chunks = [
+            corpus_data[i : i + chunk_size]
+            for i in range(0, corpus_length, chunk_size - overlap)
+        ]
+        num_chunks = len(chunks)
+        for i in range(0, num_chunks, 10):
+            chunk_subset = chunks[i : i + 10]
+            self.stored_vectors.add_texts(
+                texts=chunk_subset,
+            )
+            print(f"Processed {i + len(chunk_subset)}/{num_chunks} Items in Corpus!")
 
     def calculate_cost(self, dict_tokens):
         """
