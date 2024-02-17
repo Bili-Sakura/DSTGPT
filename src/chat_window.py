@@ -12,6 +12,8 @@ from PyQt5.QtWidgets import (
     QLabel,
     QHBoxLayout,
     QApplication,
+    QPushButton,
+    QGridLayout,
 )
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import Qt, QTimer
@@ -42,8 +44,6 @@ class ChatWindow(QScrollArea):
 
         self.initUI()
 
-        self.chatWithLLM_Demo()
-
     def initUI(self):
         """
         Initializes the user interface of the chat window.
@@ -56,12 +56,6 @@ class ChatWindow(QScrollArea):
         # Set the content container as the viewport of the chat window
         self.setWidget(self.chatWindowWidgetContents)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-
-    def chatWithLLM_Demo(self):
-        """
-        Demonstrates chatting with LLM.
-        """
-        self.addMessage("Hi! I am DST-GPT, what can I help you?", "left")
 
     def removeMessage(self, target_text):
         """

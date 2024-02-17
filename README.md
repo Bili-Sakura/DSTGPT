@@ -9,7 +9,7 @@
 
 ## Introduction
 
-We introduce **DST-GPT** , a chatrobot based on open-source language models, which focuses on answering questions for both Don't Starve and Don't Starve Together. Knowledge is incorporated from external databases based on Retrieval-Augmented Generation (RAG), a promising solution that enhances the accuracy and credibility of the models, particularly for knowledge-intensive tasks, and allows for continuous knowledge updates and integration of domain-specific information. Furthermore, we provide a lightweight deployment framework, allowing users to quickly deploy their own domain-specific models by replacing the corpus.
+We introduce **DST-GPT** , a chatrobot focusing on answering questions for both Don't Starve and Don't Starve Together. Knowledge is incorporated from external databases based on Retrieval-Augmented Generation (RAG), a promising solution that enhances the accuracy and credibility of the models, particularly for knowledge-intensive tasks, and allows for continuous knowledge updates and integration of domain-specific information. Furthermore, we provide a lightweight deployment framework, allowing users to quickly deploy their own domain-specific models by replacing the corpus.
 In this repository, we release the code of DST-GPT application, along with the code of data preparation.
 
 ***The following is the overview of constructing DST-GPT:***
@@ -166,7 +166,7 @@ Create a `chroma.sqlite3` new If there is no existing on under the database dire
 
 **Add corpus to vectorstore**
 
-You are able to add new data source(.json,.txt,.md,.py) into exisiting database. Large files can be time-cosuming, you should check the console log time to time, to see the veterization process.
+You are able to add new data source(.json,.txt,.md,.py,.lua) into exisiting database. Large files can be time-cosuming, you should check the console log time to time, to see the veterization process.
 
 **Clear vectorstore**
 
@@ -283,12 +283,7 @@ DST-GPT is a chatbot intended for non-commercial use only, subject to the model 
 
 ### Wait to do list
 
-
-**完成文案**
-
 ### Bugs
-
-**气泡布局需要调整**
 
 ### Future
 
@@ -300,3 +295,5 @@ DST-GPT is a chatbot intended for non-commercial use only, subject to the model 
 **收集格式化问答语料，进行模型性能评估**
 
 **收集格式化问答语料，尝试监督微调**
+
+**建立Benchmark Baseline**

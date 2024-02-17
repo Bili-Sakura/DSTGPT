@@ -8,8 +8,10 @@ import re
 import os
 from dotenv import set_key, find_dotenv
 from qasync import QEventLoop, asyncSlot
+from openai import PermissionDeniedError
 from langchain_community.callbacks import get_openai_callback, openai_info
 from PyQt5.QtWidgets import (
+    QApplication,
     QMainWindow,
     QWidget,
     QVBoxLayout,
@@ -23,6 +25,8 @@ from PyQt5.QtWidgets import (
     QFileDialog,
     QMessageBox,
     QDialog,
+    QGridLayout,
+    QPushButton,
 )
 from PyQt5.QtGui import QPixmap, QPalette, QBrush, QImage, QPainter, QColor
 from PyQt5.QtCore import Qt, QTimer
@@ -33,6 +37,7 @@ from src.llm import LLM
 from src.config import load_config, update_config, configUpdater
 from src.apikey_window import ApiKeyDialog
 from src.prompt_window import PromptInputDialog
+from src.hover_button import HoverButton
 
 
 class MainWindow(QMainWindow):
@@ -48,6 +53,13 @@ class MainWindow(QMainWindow):
 
         # Create an instance of LLM class
         self.llm = LLM()
+
+    def closeEvent(self, event):
+        """
+        This method is called when the main window is closed.
+        It quits the application.
+        """
+        QApplication.quit()
 
     def initUI(self):
         """
@@ -71,15 +83,31 @@ class MainWindow(QMainWindow):
         self.menuManager.createCheckableMenu(
             "Base Model",
             [
+                ("gpt-3.5-turbo", self.config.get("BASE_MODEL") == "gpt-3.5-turbo"),
                 (
                     "gpt-3.5-turbo-0125:Default",
                     self.config.get("BASE_MODEL") == "gpt-3.5-turbo-0125",
                 ),
                 (
+                    "gpt-3.5-turbo-0301",
+                    self.config.get("BASE_MODEL") == "gpt-3.5-turbo-0301",
+                ),
+                (
+                    "gpt-3.5-turbo-0613",
+                    self.config.get("BASE_MODEL") == "gpt-3.5-turbo-0613",
+                ),
+                (
+                    "gpt-3.5-turbo-instruct",
+                    self.config.get("BASE_MODEL") == "gpt-3.5-turbo-instruct",
+                ),
+                (
+                    "gpt-3.5-turbo-16k",
+                    self.config.get("BASE_MODEL") == "gpt-3.5-turbo-16k",
+                ),
+                (
                     "gpt-3.5-turbo-16k-0613",
                     self.config.get("BASE_MODEL") == "gpt-3.5-turbo-16k-0613",
                 ),
-                ("gpt-3.5-turbo", self.config.get("BASE_MODEL") == "gpt-3.5-turbo"),
             ],
         )
         self.menuManager.createCheckableMenu(
@@ -101,6 +129,7 @@ class MainWindow(QMainWindow):
             [
                 ("Initialize Vectorstore", self.initializeVectorstore),
                 ("Add Corpus to Vectorstore", self.addCorpusToVectorstore),
+                ("Add Corpus Folder to Vectorstore", self.addCorpusFolderToVectorstore),
                 ("Clear Vectorstore", self.clearVectorstore),
             ],
         )
@@ -242,13 +271,25 @@ class MainWindow(QMainWindow):
             self,
             "Select Source File",
             "",
-            "Source Files (*.txt *.json *.md *.py)",
+            "Source Files (*.txt *.json *.md *.py *.lua)",
             options=options,
         )
         if fileName:
-            source_path = os.path.relpath(fileName)
-            file_type = os.path.splitext(source_path)[1]
-            self.llm.update_vectorstore(source_path, file_type)
+            file_path = os.path.relpath(fileName)
+            self.llm.update_vectorstore(file_path)
+
+    def addCorpusFolderToVectorstore(self):
+        """
+        Opens a file dialog to allow the user to select a new source folder and updates the vectorstore.
+        """
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        directory = QFileDialog.getExistingDirectory(
+            self, "Select Source Folder", options=options
+        )
+        if directory:
+            folder_path = os.path.relpath(directory)
+            self.llm.update_vectorstore(folder_path)
 
     def clearVectorstore(self):
         """
@@ -366,6 +407,42 @@ class MainWindow(QMainWindow):
         self.chatWindow.setFixedSize(1700, 700)
         self.chatWindow.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         self.chatWindow.setStyleSheet("background-color: rgba(255, 255, 255, 0.5);")
+        # self.chatWindow.chatWithLLM_Demo()
+        self.chatWindow.addMessage("Hi! I am DST-GPT, what can I help you?", "left")
+
+        # Create the four buttons
+        buttons = []
+        button_texts = [
+            "Tell me how characters hunger drains. You should give me an answer in 500 words.",
+            "What is Wilson?",
+            "How to craft an axe?",
+            "...",
+        ]
+
+        async def buttonClicked(text):
+            for button in buttons:
+                button.hide()
+            self.askLLM(text)
+            await self.getLLMAnswer(text)
+
+        # Create a grid layout for the buttons
+        grid_layout = QGridLayout()
+
+        # Add the buttons to the grid layout
+        for i, text in enumerate(button_texts):
+            button = HoverButton(text)
+            button.clicked.connect(
+                lambda checked, text=text: asyncio.ensure_future(buttonClicked(text))
+            )
+            buttons.append(button)
+            grid_layout.addWidget(button, i // 2, i % 2)
+
+        # Set spacing between the buttons
+        grid_layout.setSpacing(10)
+        # Add a stretch to separate the chat bubble and the buttons
+        self.chatWindow.chat_layout.addStretch()
+        # Add the grid layout to the chat layout
+        self.chatWindow.chat_layout.addLayout(grid_layout)
 
     def createLabels(self):
         """
@@ -476,7 +553,10 @@ class MainWindow(QMainWindow):
         and displays a "Thinking..." message on the left side.
         """
         self.chatWindow.addMessage(user_text, "right")
-        self.chatWindow.addMessage("Thinking...", "left")
+        self.chatWindow.addMessage(
+            "Thinking...",
+            "left",
+        )
 
     async def getLLMAnswer(self, user_text):
         """
@@ -491,21 +571,32 @@ class MainWindow(QMainWindow):
 
         load_config()
         rag_status = self.config.get("RAG")
-        with get_openai_callback() as cb:
-            llm_answers = await self.llm.get_answer_async(user_text, rag_status)
-            tokens = cb.total_tokens
-            dict_tokens = {
-                "prompt_tokens": cb.prompt_tokens,
-                "completion_tokens": cb.completion_tokens,
-            }
-            # cost = cb.total_cost
-            cost = self.llm.calculate_cost(dict_tokens)
-        if llm_answers["rag"] != "" and llm_answers["pure"] != "":
-            self.chatWindow.addMessage(llm_answers["rag"], "left-rag", tokens, cost)
-            self.chatWindow.addMessage(llm_answers["pure"], "left-pure")
+        try:
+            with get_openai_callback() as cb:
+                llm_answers = await self.llm.get_answer_async(user_text, rag_status)
+                tokens = cb.total_tokens
+                dict_tokens = {
+                    "prompt_tokens": cb.prompt_tokens,
+                    "completion_tokens": cb.completion_tokens,
+                }
+                # cost = cb.total_cost
+                cost = self.llm.calculate_cost(dict_tokens)
+            if llm_answers["rag"] != "" and llm_answers["pure"] != "":
+                self.chatWindow.addMessage(llm_answers["rag"], "left-rag", tokens, cost)
+                self.chatWindow.addMessage(llm_answers["pure"], "left-pure")
 
-        elif llm_answers["pure"] != "":
-            self.chatWindow.addMessage(llm_answers["pure"], "left-pure", tokens, cost)
+            elif llm_answers["pure"] != "":
+                self.chatWindow.addMessage(
+                    llm_answers["pure"], "left-pure", tokens, cost
+                )
 
-        elif llm_answers["rag"] != "":
-            self.chatWindow.addMessage(llm_answers["rag"], "left-rag", tokens, cost)
+            elif llm_answers["rag"] != "":
+                self.chatWindow.addMessage(llm_answers["rag"], "left-rag", tokens, cost)
+        except PermissionDeniedError as e:
+            # 在这里处理异常，例如显示错误消息或执行其他适当的错误处理
+            print(f"We've got a PermissionDeniedError:\n{e}")
+            # 可选：更新UI或通知用户，需要确保在适当的线程/上下文中执行UI操作
+            self.chatWindow.addMessage(
+                f"LLM responses failed due to following reason, you may try again.\n{e}",
+                "right",
+            )
