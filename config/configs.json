@@ -14,6 +14,10 @@
     "KNOWLEDGE_SOURCES": [
         "data\\chinese_sample.txt",
         "data\\chinese_sample.txt",
-        "data\\chinese_sample.txt"
+        "data\\chinese_sample.txt",
+        "data\\code_sample.lua",
+        "data\\chinese_sample.txt",
+        "data\\chinese_sample.txt",
+        "data\\code_sample.lua"
     ]
 }
