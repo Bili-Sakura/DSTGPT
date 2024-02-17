@@ -44,8 +44,6 @@ class ChatWindow(QScrollArea):
 
         self.initUI()
 
-
-
     def initUI(self):
         """
         Initializes the user interface of the chat window.
@@ -58,44 +56,6 @@ class ChatWindow(QScrollArea):
         # Set the content container as the viewport of the chat window
         self.setWidget(self.chatWindowWidgetContents)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-
-    def chatWithLLM_Demo(self):
-        """
-        Demonstrates chatting with LLM.
-        """
-        self.addMessage("Hi! I am DST-GPT, what can I help you?", "left")
-
-        # Create the four buttons
-        buttons = []
-        button_texts = [
-            "Tell me how characters hunger drains. You should give me an answer in 500 words.",
-            "What is Wilson?",
-            "How to craft an axe?",
-            "...",
-        ]
-
-        async def buttonClicked(text):
-            for button in buttons:
-                button.hide()
-            self.addMessage(f"{text}", "right")
-            await self.getLLMAnswer(text)
-
-        # Create a grid layout for the buttons
-        grid_layout = QGridLayout()
-
-        # Add the buttons to the grid layout
-        for i, text in enumerate(button_texts):
-            button = QPushButton(text)
-            button.clicked.connect(lambda checked, text=text: asyncio.ensure_future(buttonClicked(text)))
-            buttons.append(button)
-            grid_layout.addWidget(button, i // 2, i % 2)
-
-        # Set spacing between the buttons
-        grid_layout.setSpacing(10)
-        # Add a stretch to separate the chat bubble and the buttons
-        self.chat_layout.addStretch()
-        # Add the grid layout to the chat layout
-        self.chat_layout.addLayout(grid_layout)
 
     def removeMessage(self, target_text):
         """
