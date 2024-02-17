@@ -60,7 +60,7 @@ class ChatLogger:
             chat_tokens (int): The number of chat tokens used.
             cost (float): The cost associated with the chat message.
         """
-        if message == "Thinking...":
+        if message == "Thinking... (Retry if no feedback in 10 seconds due to occasional request error)":
             return
 
         # 更新元信息

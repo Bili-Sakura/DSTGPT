@@ -283,12 +283,7 @@ DST-GPT is a chatbot intended for non-commercial use only, subject to the model 
 
 ### Wait to do list
 
-
-**完成文案**
-
 ### Bugs
-
-**气泡布局需要调整**
 
 ### Future
 

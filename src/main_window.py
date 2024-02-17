@@ -10,6 +10,7 @@ from dotenv import set_key, find_dotenv
 from qasync import QEventLoop, asyncSlot
 from langchain_community.callbacks import get_openai_callback, openai_info
 from PyQt5.QtWidgets import (
+    QApplication,
     QMainWindow,
     QWidget,
     QVBoxLayout,
@@ -23,6 +24,8 @@ from PyQt5.QtWidgets import (
     QFileDialog,
     QMessageBox,
     QDialog,
+    QGridLayout,
+    QPushButton,
 )
 from PyQt5.QtGui import QPixmap, QPalette, QBrush, QImage, QPainter, QColor
 from PyQt5.QtCore import Qt, QTimer
@@ -48,6 +51,13 @@ class MainWindow(QMainWindow):
 
         # Create an instance of LLM class
         self.llm = LLM()
+
+    def closeEvent(self, event):
+        """
+        This method is called when the main window is closed.
+        It quits the application.
+        """
+        QApplication.quit()
 
     def initUI(self):
         """
@@ -366,6 +376,40 @@ class MainWindow(QMainWindow):
         self.chatWindow.setFixedSize(1700, 700)
         self.chatWindow.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         self.chatWindow.setStyleSheet("background-color: rgba(255, 255, 255, 0.5);")
+        # self.chatWindow.chatWithLLM_Demo()
+        self.chatWindow.addMessage("Hi! I am DST-GPT, what can I help you?", "left")
+
+        # Create the four buttons
+        buttons = []
+        button_texts = [
+            "Tell me how characters hunger drains. You should give me an answer in 500 words.",
+            "What is Wilson?",
+            "How to craft an axe?",
+            "...",
+        ]
+
+        async def buttonClicked(text):
+            for button in buttons:
+                button.hide()
+            self.askLLM(text)
+            await self.getLLMAnswer(text)
+
+        # Create a grid layout for the buttons
+        grid_layout = QGridLayout()
+
+        # Add the buttons to the grid layout
+        for i, text in enumerate(button_texts):
+            button = QPushButton(text)
+            button.clicked.connect(lambda checked, text=text: asyncio.ensure_future(buttonClicked(text)))
+            buttons.append(button)
+            grid_layout.addWidget(button, i // 2, i % 2)
+
+        # Set spacing between the buttons
+        grid_layout.setSpacing(10)
+        # Add a stretch to separate the chat bubble and the buttons
+        self.chatWindow.chat_layout.addStretch()
+        # Add the grid layout to the chat layout
+        self.chatWindow.chat_layout.addLayout(grid_layout)
 
     def createLabels(self):
         """
@@ -468,15 +512,15 @@ class MainWindow(QMainWindow):
         self.askLLM(user_text)
         self.input_line.clear()
         await self.getLLMAnswer(user_text)
-        self.chatWindow.removeMessage("Thinking...")
+        self.chatWindow.removeMessage("Thinking... (Retry if no feedback in 10 seconds due to occasional request error)")
 
     def askLLM(self, user_text):
         """
         Adds the user's text to the chat window on the right side
-        and displays a "Thinking..." message on the left side.
+        and displays a "Thinking... (Retry if no feedback in 10 seconds due to occasional request error)" message on the left side.
         """
         self.chatWindow.addMessage(user_text, "right")
-        self.chatWindow.addMessage("Thinking...", "left")
+        self.chatWindow.addMessage("Thinking... (Retry if no feedback in 10 seconds due to occasional request error)", "left")
 
     async def getLLMAnswer(self, user_text):
         """
