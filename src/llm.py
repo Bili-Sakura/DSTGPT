@@ -182,9 +182,15 @@ class LLM:
                 corpus_data[i : i + chunk_size]
                 for i in range(0, corpus_length, chunk_size - overlap)
             ]
-            self.stored_vectors.add_texts(
-                texts=chunks,
-            )
+            num_chunks = len(chunks)
+            for i in range(0, num_chunks, 10):
+                chunk_subset = chunks[i : i + 10]
+                self.stored_vectors.add_texts(
+                    texts=chunk_subset,
+                )
+                print(
+                    f"Processed {i + len(chunk_subset)}/{num_chunks} Items in Corpus!"
+                )
             print(f"Successed in Adding {corpus_length} Characters into Vectorstore!")
 
         print("Vectorization Finished!")
