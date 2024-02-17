@@ -197,11 +197,12 @@ class LLM:
             with open(file_path, "r", encoding="utf-8") as file:
                 corpus_data = json.load(file)
                 # 假设 corpus_data 是一个列表，每个元素是一个包含 'text' 键的字典
-                for data in corpus_data:
+                num_elements = len(corpus_data)
+                for i, data in enumerta(corpus_data):
                     text_content = data["text"]
                     metadata = [{k: v for k, v in data.items() if k != "text"}]
                     self.add_to_vectorstore(corpus_data=text_content, metadata=metadata)
-                    print(f"Processed JSON file: {file_path}")
+                    print(f"Processed {i+1}/{num_elements} from JSON file: {file_path}")
 
         elif file_type in [".txt", ".md", ".py", ".lua"]:
             with open(file_path, "r", encoding="utf-8") as file:
