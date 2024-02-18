@@ -272,6 +272,7 @@ Download file click [here](). The executive files contains component as follow:
 Others:  
 `refined_data.json`(~50MB)  
 `chinese_ds.txt & chinese_dst.txt`(~20MB)
+`lua source code files`(folder ~100MB)
 
 ### Hugging Face
 
