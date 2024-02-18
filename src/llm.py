@@ -202,8 +202,9 @@ class LLM:
                     text_content = data["text"]
                     metadata = [{k: v for k, v in data.items() if k != "text"}]
                     self.add_to_vectorstore(corpus_data=text_content, metadata=metadata)
-                    print("")
+
                     print(f"Processed {i+1}/{num_elements} from JSON file: {file_path}")
+                    print("")
 
         elif file_type in [".txt", ".md", ".py", ".lua"]:
             with open(file_path, "r", encoding="utf-8") as file:
