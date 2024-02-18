@@ -169,7 +169,7 @@ Create a `chroma.sqlite3` new If there is no existing on under the database dire
 
 You are able to add new data source(.json,.txt,.md,.py,.lua) into exisiting database. Large files can be time-cosuming, you should check the console log time to time, to see the veterization process.
 
-**Add corpus to vectorstore**
+**Add corpus folder to vectorstore**
 
 Add all the valid data source files under the selected folder.  
 
@@ -242,6 +242,8 @@ _internal
     - python packages...
 assets
     - pictures...
+config
+    - configs.json
 data
     - sample_data.json  
     - chinese_sample.txt
@@ -263,7 +265,7 @@ Download file click [here](). The executive files contains component as follow:
 `.env`  
 
 **Required Components:**   
-`chroma.sqlite3`(~1GB) 
+`chroma.sqlite3`(~1GB)
 `configs.json`  
 `assets`(folder)  
 `sample_data.json`  
