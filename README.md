@@ -76,7 +76,7 @@ python main.py
 
 Conguratulation!  You have started the DST-GPT!  Try to chat with DST-GPT!
 
-![DST-GPT Application Demo](./assets/DST-GPT_Application_Demo.png)
+![DST-GPT Application Demo](./assets/DST-GPT_Application_Demo2.png)
 
 ## Cases
 
@@ -96,7 +96,7 @@ Wait for assessment...
 
 ## Data
 
-In this repo, we share the corpus used in DST-GPT, be it `refined_data.json`,`chinese_dst.txt`,`chinese_ds.txt`:
+In this repo, we share the corpus used in DST-GPT, be it `refined_data.json`,`chinese_dst.txt`,`chinese_ds.txt` and `lua source code files`:
 Raw data is crawled from Wiki Fandom on ~ **5000** DST webpages with little preprocess. `Refined_data.json` is restructed from raw data.
 
 ```json
@@ -139,6 +139,7 @@ msgstr "独眼巨鹿"
 ...
 ```
 
+DST/DS is mainly written in lua. `lua source code files` are source codes directly copied from `path_to_game/scripts`. The Wiki Famdom webpages are fundementally based on these source codes.
 
 ## Configurations
 

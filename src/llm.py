@@ -241,6 +241,7 @@ class LLM:
             chunk_subset = chunks[i : i + 10]
             self.stored_vectors.add_texts(
                 texts=chunk_subset,
+                metadatas=metadata,
             )
             print(f"Processed {i + len(chunk_subset)}/{num_chunks} Items in Corpus!")
 
