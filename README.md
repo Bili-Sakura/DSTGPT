@@ -155,7 +155,7 @@ Set the temperature for the foundation model. The higher the more creative, the 
 
 **3. API Key**
 
-Configure your open_api_key as well as open_base_url from widget.
+Configure your openai_api_key as well as openai_base_url(optional) from widget.
 
 **4. Vectorstore**
 
