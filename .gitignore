@@ -1,7 +1,8 @@
 # self-defined
 *.txt
-# *.pptx
+*.pptx
 *.bin
+chroma.sqlite3
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
