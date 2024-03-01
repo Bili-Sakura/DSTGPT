@@ -4,7 +4,7 @@
 </div>
 
 [![Github](https://img.shields.io/badge/GitHub-DST&#8209;GPT-000000?logo=github)](https://github.com/Bili-Sakura/DST-GPT)
-[![Bilibili](https://img.shields.io/badge/Bilibili-DST&#8209;GPT-00A1D6?logo=bilibili&logoColor=white)](https://www.bilibili.com/)
+[![Bilibili](https://img.shields.io/badge/Bilibili-DST&#8209;GPT-00A1D6?logo=bilibili&logoColor=white)](https://www.bilibili.com/video/BV19J4m1a7it/)
 [![Huggingface](https://img.shields.io/badge/Hugging%20Face-Waiting...-FF9900?logo=hugging%20face&logoColor=white)](https://huggingface.co/)
 
 ## Introduction
